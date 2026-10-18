@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inline · 看到哪,理解到哪</title><style>
+  /* iOS 横竖屏切换时会自己放大字号,关掉它,排版才稳 */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 0 20px;
+    line-height: 1.8;
+  }
+
+  /* 占位提示在阅读区规则下面定义 */
+
+  /* 阅读区:一直可编辑 */
+
+  /* 粘进来的代码块、表格:在自己的格子里横向滚,别把正文撑宽 */
+  #article pre,
+  #article table {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  #article table {
+    border-collapse: collapse;
+  }
+
+  #article th,
+  #article td {
+    border: 1px solid #e5e5e5;
+    padding: 6px 8px;
+  }
+
+  /* 粘进正文的图片:它就是内容的一部分,不是附件 */
+  /* 正文里的图:固定成一张小缩略图,不让它占据版面。
+     想看原图双击它(单击仍然留给「问」) */
+  /* 正文里的图:就是一张小缩略图(和聊天工具的附件一样大),
+     它只标记"这里有一张图",不占版面。双击看原图,单击仍是「问」 */
+
+  /* 图右上角的 ×:和框里的缩略图一致 */
+
+
+  /* 图旁边那个删除键:行内的一个小圆点,不挡光标 */
+
+
+  /* 图片外面那层:行内块,用来定位 × ;不设 contenteditable=false,光标照常进出 */
+  #article .img-hold {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 2px 4px;
+    line-height: 0;
+  }
+
+  #article .img-hold .img-x {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 11px;
+    line-height: 16px;
+    text-align: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+
+  #article .img-hold:hover .img-x { opacity: 1; }
+
+  /* 触屏没有 hover,× 一直显示 */
+  @media (hover: none) { #article .img-hold .img-x { opacity: 1; } }
+
+  #article img:not(.quote-img) {
+    display: block;
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    margin: 10px 0;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  /* 引用区里的缩略图:让你知道"这一问问的是哪张" */
+  /* 缩略图:小、右上角 × 、点开看大图 —— 和聊天工具里的附件缩略图一个意思 */
+  .askbox .qtext .thumb-wrap {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+  }
+
+  .askbox .qtext .quote-img {
+    display: block;
+    max-width: 96px;
+    max-height: 72px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e5e5e5;
+    cursor: zoom-in;
+  }
+
+  .askbox .qtext .thumb-x {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.62);
+    color: #fff;
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+
+  .askbox .qtext .thumb-wrap:hover .thumb-x {
+    opacity: 1;
+  }
+
+  /* 触屏没有 hover,× 就一直显示 */
+  @media (hover: none) {
+    .askbox .qtext .thumb-x { opacity: 1; }
+  }
+
+  /* 点缩略图看原图 */
+  #imgView {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.82);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    cursor: zoom-out;
+  }
+
+  #imgView.show { display: flex; }
+
+  #imgView img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 4px;
+  }
+  #article {
+    position: relative;   /* 提示要绝对定位在里面 */
+    width: 100%;
+    /* 没有 border-box 时,width:100% 之外还要再加 padding,
+       右边会多出 40px —— 这就是"左边有留白、右边被切掉" */
+    box-sizing: border-box;
+    min-height: 200px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    outline: none;
+    user-select: text;  /* 显式声明:避免被继承的 user-select 拦住光标 */
+  }
+
+  /* 占位提示:只在正文真的空的时候出现(CSS 的 :empty)
+     不额外用 class 记状态 —— 记状态就要有人负责同步,
+     而"谁改了正文"有好几条路径,漏一条提示就会浮在内容上 */
+
+  #article:empty::before {
+    content: attr(data-hint);
+    color: #bbb;
+    pointer-events: none;      /* 点它等于点阅读区,光标能落进去 */
+
+    /* 关键:绝对定位,脱离文档流 ——
+       不然这个块级伪元素会把"内容起点"顶到它后面,
+       光标就落在提示文字的末尾,看起来像在编辑那句提示。
+       脱离后光标回到起点,和输入框的占位提示表现一致。 */
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    right: 20px;
+  }
+
+  /* 选中后出现的小标记:点了才建提问框
+     这样"选中"就不再等于"提问",复制、高亮、提问三种意图分得开 */
+  #askMark {
+    display: none;
+    position: fixed;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 600;
+    border: none;
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.45);
+    z-index: 70;
+    user-select: none;
+  }
+
+  #askMark.show {
+    display: block;
+  }
+
+  #askMark:hover {
+    background: #2563eb;
+  }
+
+  /* 最小化 / 隐藏 / 展开:放在顶部那一行里,不再浮在正文上
+     框少于两个时它没有存在的必要,所以默认藏起来 */
+  #foldAllBtn {
+    display: none;
+    position: fixed;
+    right: 16px;
+    bottom: 20px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    z-index: 60;
+    user-select: none;
+  }
+
+  #foldAllBtn.show {
+    display: inline-block;
+  }
+
+  #foldAllBtn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+  }
+
+  #foldAllBtn:active {
+    background: #1d4ed8;
+  }
+
+  /* 提问框:内嵌在正文里
+     插在"你选中那段所在的段落"后面,下面的文字往下让位 ——
+     原文和答案能同时看见,不用把框挪开。
+     用 class 而不是 id —— 因为可以同时存在好几个 */
+  /* 指向原文:鼠标移到某个框上时,把它"是从哪一句问出来的"标出来
+     用 CSS Highlight API —— 它不改 DOM,所以原文一个字都不会被动到 */
+  ::highlight(inline-src) {
+    background-color: #ffe9a8;
+  }
+
+  .askbox {
+    position: static;
+    margin: 4px 0 14px;
+    padding: 8px 12px;
+    background: #f8fbff;
+    border: 1px solid #dbeafe;
+    border-left: 3px solid #3b82f6;
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* 头部:一条很窄的行,只放两个按钮,靠右
+     内嵌之后没有"拖动"这回事了,所以它不再是把手 */
+  .askbox .handle {
+    height: 16px;
+    margin: -4px -6px -2px 0;
+    position: relative;
+    user-select: none;
+  }
+
+  /* 收起 / 关闭按钮,放在把手右端
+     做成 22×22 的方块,好点、也好认 */
+  .askbox .close,
+  .askbox .fold {
+    position: absolute;
+    top: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    color: #888;
+    padding: 0;
+  }
+
+  .askbox .close { right: 2px; }
+  .askbox .fold  { right: 26px; }
+
+  .askbox .close:hover,
+  .askbox .fold:hover {
+    background: #eee;
+    color: #222;
+  }
+
+  /* 关闭键悬停时微微提醒一下它是有破坏性的 */
+  .askbox .close:hover {
+    background: #ffe3e3;
+    color: #c00;
+  }
+
+  /* 收起状态:只留一行层级标签 */
+  /* 追问链:挂在父框内部的答案下面,用一条浅色竖线表示"这是它的下一层"
+     追问问的是上一轮答案,所以它不该出现在正文里 */
+  .askbox .thread {
+    margin-top: 8px;
+    padding-left: 10px;
+    border-left: 2px dashed #cfe0fa;
+  }
+
+  .askbox .thread .askbox {
+    margin: 8px 0 2px;
+  }
+
+  /* 收起态:缩成一个贴着字的小胶囊 —— 和正文同高,不占一整行
+     有标题就显示标题(太长就截断),还没有标题就显示 +
+     这样正文能连成一句,答案只留一个小标记在旁边 */
+  .askbox.collapsed {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+
+  .askbox.collapsed > *:not(.chip) {
+    display: none;
+  }
+
+  .askbox .chip {
+    display: none;
+  }
+
+  .askbox.collapsed .chip {
+    display: inline-block;
+    max-width: 9em;
+    margin-left: 2px;
+    padding: 0 2px;
+    font-size: 0.72em;
+    line-height: 1.4;
+    font-weight: 500;
+    color: #7b8bab;
+    background: transparent;
+    border-bottom: 1px dashed rgba(123, 139, 171, 0.55);
+    border-radius: 0;
+    vertical-align: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* 只在悬停时才"亮起来" —— 平时它就是一处淡淡的批注 */
+  .askbox.collapsed .chip:hover {
+    color: #1d4ed8;
+    background: #e8f0fe;
+    border-bottom-color: transparent;
+    border-radius: 4px;
+  }
+
+  /* 层级靠颜色分:直接问正文的偏蓝,追问出来的偏紫 */
+  .askbox.nested.collapsed .chip {
+    color: #8b7bab;
+    border-bottom-color: rgba(139, 123, 171, 0.55);
+  }
+
+  .askbox.nested.collapsed .chip:hover {
+    color: #7c3aed;
+    background: #f3ecff;
+  }
+
+  /* 框里显示的"你选中的那段" */
+  .askbox .quote {
+    display: block;
+    clear: both;
+    margin-bottom: 6px;
+    border-left: 2px solid #ddd;
+    padding-left: 8px;
+  }
+
+  /* 层级标签:做成徽章,一眼能认出这是树的哪一层 */
+  .askbox .qlabel {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: #e8f0fe;
+    border-radius: 4px;
+    padding: 1px 7px;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  /* 每个框自己的标题:答案出来之后补上,用来"一眼看出这个框在讲什么" */
+  .askbox .qtitle {
+    display: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #222;
+    margin: 2px 0 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 追问层的标题用紫色 —— 徽章删掉之后,这是它唯一的颜色身份,
+     而且只染标题这一行,不会把整块内容都染花 */
+  .askbox.nested .qtitle {
+    color: #7a67a8;   /* 同一个紫,但降了饱和度 —— 标题够醒目就够了,不用抢 */
+  }
+
+  .askbox .qtitle.show {
+    display: block;
+  }
+
+  /* 引用的原文:默认比正文轻一点(追问里那段只是"回忆辅助"),但要能看清 */
+  .askbox .qtext {
+    font-size: 12px;
+    color: #666;
+  }
+
+  /* 第一层的引用是你正在问的那段原文 —— 是主角,给正常可读的样式 */
+  .askbox.level1 .qtext {
+    font-size: 13px;
+    color: #333;
+  }
+
+  /* 引用限高 + 内部滚动
+     为什么不用"展开/收起":展开之后框会比屏幕还高,
+     下面的输入框、关闭键、收起键全被推出屏幕,反而没法操作了
+     滚动则让框的高度恒定,引用多长都不影响其他部分 */
+  /* 引用区里放的是缩略图:不裁切、不滚动 */
+  .askbox .qtext.has-img {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .askbox .qtext.scrollable {
+    max-height: 72px;    /* 大约 3~4 行,再多就在框内滚 */
+    overflow-y: auto;
+  }
+
+  /* 输入行:输入框 + 发送按钮 并排,两者同高同基线 */
+  .askbox .askline {
+    clear: both;   /* 上面是缩略图时,输入行必须另起一行 */
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .askbox .q {
+    flex: 1;
+    min-width: 0;
+    height: 28px;          /* 和按钮同高,视觉才齐 */
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .askbox .ask {
+    border: none;
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1;
+    width: 32px;
+    height: 28px;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .askbox .ask:hover {
+    background: #2563eb;
+  }
+
+  .askbox .ask:active {
+    background: #1d4ed8;
+  }
+
+  .askbox .hint {
+    font-size: 11px;
+    color: #aaa;
+  }
+
+  /* API key 输入条 */
+  #setup {
+    display: flex;
+    flex-wrap: wrap;      /* 必须能换行 —— 否则"已保存"占满整行时会把按钮压扁 */
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  /* 只有真的窄屏(手机)才让「已保存」独占一行 —— 触屏笔记本不算 */
+  @media (max-width: 680px) {
+    #keyState { flex: 1 1 100%; order: 10; max-width: none; }
+  }
+
+  #keyInput {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 34px 6px 10px;   /* 右边留出图片按钮的位置 */
+    border: 1px solid #ddd;   /* 之前被覆盖掉了,补回来 */
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+  }
+
+  /* 保存:和旁边那一排完全同一套尺寸,只把字色加深一点表示可点 */
+  #keySave {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #333;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+  }
+
+  /* key 的状态:紧跟在输入框右边。
+     它描述的是"里面那把钥匙",不是"保存"这个动作 —— 所以贴在输入框旁边 */
+  #keyState {
+    flex: 0 0 auto;
+    color: #999;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 10em;
+  }
+
+  /* 语言开关:显示的是"点了会切到哪个语言" */
+
+  #langBtn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #666;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* 插入图片:图标按钮,和周围按钮同高 */
+  /* 输入框那一层:相对定位,好把图片按钮贴在框里 */
+  .keywrap {
+    position: relative;
+    display: flex;
+    flex: 1 1 220px;
+    max-width: 420px;   /* 有上限,后面的状态和按钮才排得下 */
+    min-width: 0;
+  }
+
+  /* 图片按钮:贴在输入框右端内侧,不占工具栏的格子 */
+  #imgBtn {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: #999;
+    cursor: pointer;
+  }
+
+  #imgBtn:hover { color: #1d4ed8; }
+
+  #imgBtn svg { display: block; }
+
+  #langBtn:hover {
+    background: #f2f2f2;
+    color: #222;
+  }
+
+  /* 清空:和其它小按钮同一套样式,但悬停时偏红,提醒它是有破坏性的 */
+  #clearBtn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #666;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  #clearBtn:hover {
+    background: #ffe3e3;
+    border-color: #f5c2c2;
+    color: #c02626;
+  }
+
+  /* 导出 / 存档 / 导入:和上面两个同一套小按钮样式 */
+  #exportBtn,
+  #archiveBtn,
+  #importBtn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #666;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  #exportBtn:hover,
+  #archiveBtn:hover,
+  #importBtn:hover {
+    background: #f2f2f2;
+    color: #222;
+  }
+
+  /* 答案显示区 */
+  /* 等模型时的占位文字 */
+  .askbox .answer.waiting {
+    color: #999;
+  }
+
+  .askbox .answer {
+    font-size: 13px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #eee;
+    color: #333;
+    max-height: 200px;   /* 答案太长时框内滚动,不要撑破屏幕 */
+    overflow-y: auto;
+  }
+
+  .askbox .answer:empty {
+    display: none;
+  }
+
+  /* 底部提示:只在光标进到这个框里的时候出现。
+     "回车提问 · Esc 关闭"看两遍就记住了,一直摆着就是噪音 */
+  .askbox .foot .hint {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .askbox:focus-within .foot .hint {
+    opacity: 1;
+  }
+
+  /* 底部一行:左边提示,右边复制 —— 复制不浮在答案上,也就不会挡字 */
+  .askbox .foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .askbox .copy {
+    padding: 3px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #666;
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* 出错时的「重试」:像链接,不像按钮 */
+  .askbox .retry {
+    border: none;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    color: #3b82f6;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .askbox .retry:hover {
+    color: #1d4ed8;
+  }
+
+  .askbox .copy:hover {
+    background: #f2f2f2;
+    color: #222;
+  }
+
+  .askbox .copy.done {
+    color: #16a34a;
+    border-color: #16a34a;
+  }
+
+  /* 没有答案的时候不显示 */
+  .askbox .answer:empty ~ .foot .copy {
+    display: none;
+  }
+
+  /* 窄屏(手机):收掉留白和内边距,把控件放大到手指点得准 */
+  @media (max-width: 780px) {
+    /* 页面比屏幕宽会让左右都被切掉(还会被横向拖动) —— 直接禁掉横向溢出 */
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
+    }
+
+    body {
+      /* 占满屏宽:去掉居中留白和上边距,手机上这几十像素很值钱 */
+      max-width: none;
+      margin: 0;
+      padding: 8px 8px 170px;
+    }
+
+  #article {
+      overflow-x: hidden;
+      overflow-wrap: break-word;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 2px 0 8px;
+    }
+
+    /* 顶部那行:吸附在顶上,滚到哪都够得着 */
+    #setup {
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0 -8px 8px;
+      padding: 6px 8px;
+      background: rgba(250, 250, 250, 0.96);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid #eee;
+    }
+
+    /* 输入框独占一行 */
+    .keywrap {
+      flex: 1 1 100%;
+      order: -1;
+      max-width: none;
+    }
+
+    #keyInput {
+      flex: 1 1 100%;
+      order: -1;
+      padding: 9px 11px;
+      font-size: 15px;
+    }
+
+    /* 六个按钮挤在一排:收窄内边距,字号 13,不换行 */
+    #keySave,
+    #langBtn,
+    #exportBtn,
+    #archiveBtn,
+    #importBtn,
+    #clearBtn {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 8px 2px;
+      font-size: 13px;
+      min-height: 36px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 「问」在手机上做大一点:二级之后的选区离得远,太小根本看不见 */
+    #askMark {
+      padding: 8px 16px;
+      font-size: 15px;
+      border-radius: 18px;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.45);
+    }
+
+    #askMark {
+      z-index: 95;   /* 要压过抽屉(90),否则展开之后二问点不到 */
+    }
+
+  #article {
+      padding: 14px;
+      font-size: 17px;
+    }
+
+    .askbox {
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+
+    /* 抽屉里的字也放大,手机上 13px 太小 */
+    .askbox .qtext { font-size: 14px; }
+    .askbox.level1 .qtext { font-size: 15px; }
+    /* 等模型时的占位文字 */
+  .askbox .answer.waiting {
+    color: #999;
+  }
+
+  .askbox .answer { font-size: 15px; max-height: 220px; }
+    .askbox .qtitle { font-size: 15px; }
+
+    /* 引用区里放的是缩略图:不裁切、不滚动 */
+  .askbox .qtext.has-img {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .askbox .qtext.scrollable {
+      max-height: 96px;
+    }
+
+    /* 框里的输入框和发送键也放大 */
+    .askbox .q {
+      font-size: 16px;
+      padding: 6px 0;
+    }
+
+    /* 最小化按钮放在右边(顺手),但抬高一些 ——
+       右下角是每行输入框的发送键,压在那儿会互相挡 */
+    #foldAllBtn {
+      left: auto;
+      right: 10px;
+      bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    /* 手机上没有 Esc 键,这行提示没意义,还占地方 */
+    .askbox .hint {
+      display: none;
+    }
+
+    .askbox .ask {
+      width: 42px;
+      height: 42px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <h1 data-i18n="title">Inline · 看到哪,理解到哪</h1>
+
+  <!-- API key 输入条:填一次,存在浏览器本地,不用反复填 -->
+  <div id="setup">
+    <div class="keywrap">
+      <input id="keyInput" type="password" placeholder="填入 DeepSeek API Key(sk-…)" data-i18n-ph="keyPh" autocomplete="off">
+      <button id="imgBtn" title="插入图片" data-i18n-title="insertImageTitle" aria-label="插入图片">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <path d="M21 15l-5-5L5 21"></path>
+        </svg>
+      </button>
+    </div>
+    <span id="keyState"></span>
+    <button id="keySave" data-i18n="save">保存</button>
+    <button id="langBtn" title="Language">EN</button>
+    <button id="exportBtn" data-i18n="exportMd" data-i18n-title="exportTitle" title="导出为 Markdown">导出</button>
+    <button id="archiveBtn" data-i18n="exportJson" data-i18n-title="archiveTitle" title="导出存档,换浏览器时可以搬过去">存档</button>
+    <button id="importBtn" data-i18n="importJson" data-i18n-title="importTitle" title="从存档文件恢复">导入</button>
+    <button id="clearBtn" data-i18n="clear" data-i18n-title="clearTitle" title="清空正文和所有框">清空</button>
+    <input id="imgPick" type="file" accept="image/*" style="display:none">
+  </div>
+
+  <!-- 阅读区:一直可编辑,想改就改,不需要先切模式 -->
+  <div id="article" contenteditable="true"></div>
+
+  <!-- 框开多了才出现:浮在右下角,不占正文也不占顶栏 -->
+  <button id="foldAllBtn" title="最小化 / 隐藏 / 展开 所有框" data-i18n-title="foldAllTitle">最小化所有</button>
+<!-- 选中后出现的小标记,点了才建框 -->
+  <button id="askMark" data-i18n="askMark" data-i18n-title="askMarkTitle" title="就这段提问">问</button>
+
+  <!-- 点缩略图时全屏看原图 -->
+  <div id="imgView"><img alt=""></div>
+
+  <!-- 浮框模板:每次选中就克隆一个,所以可以同时存在好几个 -->
+  <template id="boxTpl">
+    <div class="askbox">
+      <span class="chip"></span>
+      <div class="handle">
+        <button class="fold" title="收起 / 展开">−</button>
+        <button class="close" title="关闭">×</button>
+      </div>
+      <div class="quote">
+        <div class="qlabel"></div>
+        <div class="qtitle"></div>
+        <div class="qtext"></div>
+      </div>
+      <div class="askline">
+        <input class="q" type="text" placeholder="问一句…" data-i18n-ph="askPh" autocomplete="off">
+        <button class="ask" title="提问" data-i18n-title="askTitle">→</button>
+      </div>
+      <div class="answer"></div>
+      <div class="foot">
+        <span class="hint" data-i18n="footHint">回车提问 · Esc 关闭</span>
+        <button class="copy" title="复制这段回答" data-i18n-title="copyTitle" data-i18n="copy">复制</button>
+      </div>
+    </div>
+  </template>
+
+<script>
+  const article = document.getElementById("article");
+  const askMark = document.getElementById("askMark");
+  let pending = null;   // 等待确认的那次选中(文字、位置、层级、父级答案)
+
+  // ============================================================
+  //  演示模式
+  //  留空 = 用你自己的 key(开源版本就是这样)
+  //  填上代理地址 = 用免费演示额度,不用填 key
+  //  代理必须自己带限额,否则会被人刷爆 —— 见 demo/worker.js
+  // ============================================================
+  // 版本:不进页面,只进控制台和存档 —— 排查时能对上,平时看不见
+  // 想换后端/模型?改这两行就行,不用碰别的地方。
+  // 任何兼容 OpenAI 接口的服务都能用:把 BASE 换成它,再换个模型名。
+  const API_BASE  = "https://api.deepseek.com";
+  const API_MODEL = "deepseek-chat";
+  // 带图提问时用这个 —— deepseek-chat 不看图,flash 看
+  const API_MODEL_VISION = "deepseek-flash";
+
+  const DEMO_ENDPOINT = "";
+  const DEMO_MODE = DEMO_ENDPOINT !== "" && location.protocol !== "file:";
+
+  // 手机判断:窄屏 或 触屏都算。
+  // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
+  // 结果一套手机样式都没生效,页面还按桌面排版。
+  // 版本:不进页面,只进控制台和存档 —— 排查时能对上
+  const BUILD = "2026-10-18 19:01";
+  console.log("Inline build", BUILD);
+
+  // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
+  // 否则它会拿到手机上那套更大的控件和换行,比例整个变形
+  function isMobileView() {
+    return window.matchMedia("(max-width: 780px)").matches;
+  }
+  // ============================================================
+  //  双语
+  //  所有会显示给人看的文字都从这里取,不要写死在代码里 ——
+  //  否则切到英文时,那些写死的地方会突然冒出一句中文
+  // ============================================================
+  const T = {
+    zh: {
+      title:            "Inline · 看到哪,理解到哪",
+      keyPh:            "填入 DeepSeek API Key(sk-…)",
+      save:             "保存",
+      keySaved:         "已保存 ✓",
+      keyEmpty:         "未设置",
+      emptyHint:        "把要读的文字贴进来。拖动选中其中一段,会出现「问」。",
+      foldAllTitle:     "最小化 / 隐藏 / 展开 所有框",
+      minimizeAll:      "最小化所有",
+      hideAll:          "隐藏所有",
+      expandAll:        "展开所有",
+      minimizeShort:    "收起",
+      hideShort:        "隐藏",
+      expandShort:      "展开",
+      clear:            "清空",
+      clearConfirm:     "清空正文和所有框?这个操作不可撤销。",
+      exportMd:         "导出",
+      exportJson:       "存档",
+      importJson:       "导入",
+      importFailed:     "导入失败:这个文件不是本工具导出的存档。",
+      fileNamePrompt:   "文件名(不用写扩展名):",
+      retry:            "重试",
+      demoMode:         "演示模式 · 每天有限额",
+      demoLimit:        "今天的演示额度用完了。明天再来,或者下载后用你自己的 key。",
+      level1:           "正文",
+      imageLabel:       "图片",
+      storageFull:      "存不下了,内容太大",
+      removeImage:      "移除这张图",
+      insertImageTitle: "插入图片",
+      lookingAtImage:   "正在看这张图…",
+      thinking:         "正在思考中…",
+      askPh:            "问一句…",
+      askTitle:         "提问",
+      footHint:         "回车提问 · Esc 关闭",
+      copy:             "复制",
+      copied:           "已复制",
+      copyTitle:        "复制这段回答",
+      foldTitle:        "收起 / 展开",
+      closeTitle:       "关闭",
+      askMarkTitle:     "就这段提问",
+      askMark:          "问",
+      exportTitle:      "导出为 Markdown",
+      archiveTitle:     "导出存档,换浏览器时可以搬过去",
+      importTitle:      "从存档文件恢复",
+      clearTitle:       "清空正文和所有框",
+      noKey:            "还没有填 API Key,在上面那个框里填一下。",
+      reqFail:          "请求失败",
+      errAuth:          "API Key 无效或已过期,请在顶部重新填写。",
+      errQuota:         "余额不足,请到 DeepSeek 后台充值。",
+      errRate:          "请求太频繁,稍等一下再试。",
+      errPrefix:        "出错了:",
+      titlePrompt:      "给下面这段问答起一个不超过 12 个字的标题。只输出标题本身,不要引号,不要句号。",
+      titleQ:           "问:",
+      titleA:           "答:",
+      sysPrompt:        "用大白话解释用户选中的内容,只回答他问的那一点,不要展开无关的东西。",
+      followIntro:      "这是一个追问,针对你上一轮的回答。",
+      followPrev:       "上一轮你的回答是:",
+      followSel:        "用户选中了其中的一句:",
+      followQ:          "他的问题是:",
+      readHere:         "我读到这里:",
+      myQuestion:       "我的问题:"
+    },
+    en: {
+      title:            "Inline · Understand where you read",
+      keyPh:            "Enter your DeepSeek API key (sk-…)",
+      save:             "Save",
+      keySaved:         "Saved ✓",
+      keyEmpty:         "Not set",
+      emptyHint:        "Paste what you want to read. Drag to select a passage and an “Ask” button appears.",
+      foldAllTitle:     "Minimize / Hide / Expand all windows",
+      minimizeAll:      "Minimize all",
+      hideAll:          "Hide all",
+      expandAll:        "Expand all",
+      minimizeShort:    "Fold",
+      hideShort:        "Hide",
+      expandShort:      "Open",
+      clear:            "Clear",
+      clearConfirm:     "Clear the text and all windows? This cannot be undone.",
+      exportMd:         "Export",
+      exportJson:       "Backup",
+      importJson:       "Import",
+      importFailed:     "Import failed: this file was not exported by this tool.",
+      fileNamePrompt:   "File name (no extension):",
+      retry:            "Retry",
+      demoMode:         "Demo mode · limited per day",
+      demoLimit:        "Today's demo quota is used up. Come back tomorrow, or download it and use your own key.",
+      level1:           "Source",
+      imageLabel:       "Image",
+      storageFull:      "Cannot save: too large",
+      removeImage:      "Remove image",
+      insertImageTitle: "Insert image",
+      lookingAtImage:   "Looking at the image…",
+      thinking:         "Thinking…",
+      askPh:            "Ask something…",
+      askTitle:         "Ask",
+      footHint:         "Enter to ask · Esc to close",
+      copy:             "Copy",
+      copied:           "Copied",
+      copyTitle:        "Copy this answer",
+      foldTitle:        "Collapse / expand",
+      closeTitle:       "Close",
+      askMarkTitle:     "Ask about this",
+      askMark:          "Ask",
+      exportTitle:      "Export as Markdown",
+      archiveTitle:     "Download a backup you can move to another browser",
+      importTitle:      "Restore from a backup file",
+      clearTitle:       "Clear the text and all windows",
+      noKey:            "No API key yet — fill it in the box above.",
+      reqFail:          "Request failed",
+      errAuth:          "API key is invalid or expired. Please re-enter it at the top.",
+      errQuota:         "Insufficient balance. Top up your DeepSeek account.",
+      errRate:          "Too many requests. Wait a moment and try again.",
+      errPrefix:        "Error: ",
+      titlePrompt:      "Give the following exchange a title of at most 6 words. Output only the title, no quotes, no period.",
+      titleQ:           "Q: ",
+      titleA:           "A: ",
+      sysPrompt:        "Explain the selected passage in plain language. Answer only the point asked, and do not pad it with anything unrelated.",
+      followIntro:      "This is a follow-up about your previous answer.",
+      followPrev:       "Your previous answer was:",
+      followSel:        "The user selected one sentence from it:",
+      followQ:          "Their question is: ",
+      readHere:         "I am reading this:",
+      myQuestion:       "My question: "
+    }
+  };
+
+  // 默认跟浏览器语言走:中文环境用中文,其它一律英文
+  // 存过选择就优先用存的那份
+  const savedLang = localStorage.getItem("inline_lang");
+
+  // 默认语言:存过就用存的;没存过就看两个信号。
+  // 只看 navigator.language 不够 —— 很多中文用户装着英文界面的浏览器,
+  // 于是被推到英文默认。时区是一个更诚实的信号。
+  function guessLang() {
+    const nav = (navigator.language || "").toLowerCase();
+    if (nav.startsWith("zh")) return "zh";
+
+    let tz = "";
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) {}
+    if (tz === "Asia/Shanghai" || tz === "Asia/Chongqing" || tz === "Asia/Taipei"
+        || tz === "Asia/Hong_Kong" || tz === "Asia/Macau") return "zh";
+
+    return nav ? "en" : "zh";
+  }
+
+  let lang = savedLang || guessLang();
+
+  function t(key) {
+    const v = T[lang][key];
+    return typeof v === "function" ? v.apply(null, [].slice.call(arguments, 1)) : v;
+  }
+
+  let timer = null;
+  let ignoreNext = false;   // 标记:下一次选中变化是程序自己造成的
+  let mouseDown = false;    // 鼠标是否还按着 —— 按着的时候不处理选中
+  const boxes = [];         // 所有开着的框(全局折起时用)
+
+  // ---------- 指向原文 ----------
+  // 用 CSS Highlight API:它只影响绘制,不改 DOM ——
+  // 原文一个字都不会被动到,这也是当初不拆段落的原因
+  const HL_NAME = "inline-src";
+
+  function highlightSource(range) {
+    if (!window.CSS || !CSS.highlights || typeof Highlight === "undefined") return;
+    try {
+      CSS.highlights.delete(HL_NAME);   // 同一时刻只标一处
+      CSS.highlights.set(HL_NAME, new Highlight(range));
+    } catch (e) { /* 不支持的浏览器就算了,不影响别的 */ }
+  }
+
+  function clearSourceHighlight() {
+    if (window.CSS && CSS.highlights) CSS.highlights.delete(HL_NAME);
+  }
+
+  // 一键循环:展开 → 最小化 → 隐藏 → 展开
+  // 最小化:全部收成贴在字后面的小胶囊,正文连续,标记还在
+  // 隐藏  :全部消失,正文完全干净 —— 要改原文结构时用这个,免得框挡住
+  function toggleAllBoxes() {
+    if (!boxes.length) return;
+
+    const anyOpen   = boxes.some(b => !b.folded);
+    const anyVisible = boxes.some(b => b.el.style.display !== "none");
+
+    if (anyOpen) {
+      boxes.forEach(b => b.fold());                    // 先收成胶囊
+    } else if (anyVisible) {
+      boxes.forEach(b => { b.el.style.display = "none"; });   // 再全部藏起来
+    } else {
+      boxes.forEach(b => { b.el.style.display = ""; b.unfold(); });  // 全回来
+    }
+
+    refreshFoldAllBtn();
+  }
+
+  // 按钮只在"框超过一个"时出现,文字说的是"下一步会做什么"
+  function refreshFoldAllBtn() {
+    const btn = document.getElementById("foldAllBtn");
+    if (!btn) return;
+
+    btn.classList.toggle("show", boxes.length > 1);
+
+    const anyOpen    = boxes.some(b => !b.folded);
+    const anyVisible = boxes.some(b => b.el.style.display !== "none");
+
+    const short = isMobileView();
+    btn.textContent = anyOpen
+      ? t(short ? "minimizeShort" : "minimizeAll")
+      : anyVisible
+        ? t(short ? "hideShort" : "hideAll")
+        : t(short ? "expandShort" : "expandAll");
+  }
+
+  // ============================================================
+  //  提问框:每次选中都克隆一个新的,所以可以同时存在好几个
+  //  每个框自己带着"它锚定的那段文字",互不干扰
+  // ============================================================
+  class AskBox {
+    constructor(text, anchor, depth, parentAnswer, opts) {
+      opts = opts || {};
+      this.text = text;
+
+      // 锚点 = 选区末尾那个"点"
+      // 它决定框插在哪个段落后面(取末尾所在的那个段落)
+      // 从存档重建时没有活选区,anchor 传 null
+      this.anchor = anchor ? anchor.cloneRange() : null;
+      if (this.anchor) this.anchor.collapse(false);   // 收起到末尾
+
+      // 另留一份"没收起"的选区:鼠标移到框上时,用它高亮原文里那句话
+      this.srcRange = anchor ? anchor.cloneRange() : null;
+
+      this.depth = depth || 1;   // 第几层:正文里问出来的是第 1 层,在答案上再问就是第 2 层
+      this.parentAnswer = parentAnswer || "";   // 父级答案:追问时作为背景一起发给模型
+
+      const node = document.getElementById("boxTpl").content.cloneNode(true);
+      this.el     = node.querySelector(".askbox");
+      this.quoteEl = node.querySelector(".quote");
+      this.qtextEl = node.querySelector(".qtext");
+      this.inputEl = node.querySelector(".q");
+      this.answerEl = node.querySelector(".answer");
+      const askBtn = node.querySelector(".ask");
+      const closeBtn = node.querySelector(".close");
+      const foldBtn  = node.querySelector(".fold");
+      this.copyBtn   = node.querySelector(".copy");
+      this.foldBtn   = foldBtn;
+      this.folded    = false;
+      this.qlabelEl  = node.querySelector(".qlabel");
+      this.titleEl   = node.querySelector(".qtitle");
+      this.chipEl    = node.querySelector(".chip");
+      this.image     = opts.image || "";    // 有值 = 这一问问的是这张图
+      this.imgEl     = opts.imgEl || null;  // 图在正文里的位置,框要插在它后面
+      this.titleText = "";      // 收起成小胶囊时显示的就是它
+      this.titled    = false;   // 标题只生成一次,后面再问也不改它
+
+      // 点小胶囊就展开
+      // 点标签展开。触屏上要拦 touchstart 才能不弹键盘,
+      // 但拦了 touchstart 之后 click 就不会再触发 —— 所以动作放 touchend
+      const activateChip = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.unfold();
+        // 点标签时浏览器可能先把焦点给了正文(它是 contenteditable),
+        // 键盘就弹出来了 —— 这里主动收掉
+        if (document.activeElement === article) article.blur();
+      };
+      this.chipEl.addEventListener("touchend", activateChip, { passive: false });
+      this.chipEl.addEventListener("click", activateChip);
+      this.chipEl.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+
+      if (this.depth > 1) {
+        this.el.classList.add("nested");   // 收成胶囊时用紫色,和正文的蓝色分开
+      } else {
+        // 第一层的引用是主角(你正在问的原文),给正常可读的样式
+        this.el.classList.add("level1");
+      }
+      if (this.image) {
+        // 引用区放一个小缩略图 —— 这一问问的是图本身,没有"选中的文字"
+        this.qtextEl.textContent = "";
+        const wrap = document.createElement("span");
+        wrap.className = "thumb-wrap";
+
+        const thumb = document.createElement("img");
+        thumb.src = this.image;
+        thumb.className = "quote-img";
+        thumb.style.maxWidth = "96px";
+        thumb.style.maxHeight = "72px";
+        thumb.style.objectFit = "cover";
+        thumb.style.borderRadius = "6px";
+
+        // 右上角的 × :把这一问连同图一起收掉
+        const x = document.createElement("button");
+        x.className = "thumb-x";
+        x.type = "button";
+        x.textContent = "×";
+        x.setAttribute("contenteditable", "false");
+        x.title = t("removeImage");
+        x.addEventListener("click", (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          this.close();
+        });
+
+        wrap.appendChild(thumb);
+        wrap.appendChild(x);
+        this.qtextEl.appendChild(wrap);
+      } else {
+        this.qtextEl.textContent = text;
+      }
+
+      // 所有会显示的文字都在这里统一写入 —— 切语言时重跑一次就行
+      this.rerender();
+
+      this.el._depth = this.depth;   // 挂在 DOM 上,建子框时用来读父层级
+
+      // 内嵌:把框插进正文流里,而不是浮在页面上
+      // 就地插入 —— 正好插在你选中那段文字的末尾,后面的字接着往下排
+      this.el.setAttribute("contenteditable", "false");   // 别让它变成可编辑内容
+
+      // 层级缩进:窄屏上 30px 一层会把正文挤没,减到 12px
+      const narrow = isMobileView();
+      const step   = narrow ? 12 : 30;
+      this.el.style.marginLeft = (Math.min(this.depth - 1, 4) * step) + "px";
+
+      // 把框放进文档里。三种情况:
+      //   ① 从存档重建的追问 —— 父框已知,直接挂进它的追问链
+      //   ② 现场追问(在某个答案里选中) —— 也挂进那个框的追问链
+      //   ③ 从正文里问 —— 就地插在选区末尾
+      {
+        const endNode = this.anchor ? this.anchor.endContainer : null;
+        const endEl   = endNode
+          ? (endNode.nodeType === 1 ? endNode : endNode.parentElement)
+          : null;
+        const parentPanel = opts.parent || (endEl && endEl.closest(".askbox"));
+
+        if (parentPanel) {
+          // 追问留在父框里面 —— 它问的是"上一轮答案",不是原文
+          // 放进正文会变成并排的兄弟块,看不出谁是谁的下层
+          const host = parentPanel.el || parentPanel;
+          let thread = host.querySelector(".thread");
+          if (!thread) {
+            thread = document.createElement("div");
+            thread.className = "thread";
+            host.appendChild(thread);
+          }
+          thread.appendChild(this.el);
+          this.el.style.marginLeft = "12px";
+        } else if (this.imgEl) {
+          // 问的是图片:框插在图片那一行之后,而不是图片后面。
+          // 插在"包着这张图的那个块"之后 —— 段落就插在段落后面,
+          // 图直接挂在正文下时就插在图那一行后面。这样框一定是整宽的
+          // 从图片往上找"它的容器" —— 图片外面包着 .img-hold,
+          // 只找 p/li 会漏掉它,结果框被插进了 72px 的图容器里
+          const hold = this.imgEl.closest(".img-hold") || this.imgEl;
+          const host = hold.closest("p, li, blockquote") || hold.parentElement || hold;
+          host.after(this.el);
+          this.el.style.marginLeft = "0";
+        } else if (this.anchor) {
+          // 就地插入:在光标处切一下文本节点,把框放进两句之间。
+          // 不拆段落、不搬文本 —— 删掉这个框,段落自己就合回去了。
+          try {
+            const caret = this.anchor.cloneRange();
+            caret.insertNode(this.el);
+          } catch (e) {
+            // 极少数情况插不进去(比如选区跨了奇怪的结构),退回段落之后
+            const block = endEl.closest("p, li, blockquote, h1, h2, h3, h4") || article;
+            block.after(this.el);
+          }
+        }
+      }
+
+      boxes.push(this);              // 登记,全局折叠要用
+
+      // 引用太长时给它限高(否则一个长引用会把框撑很高)
+      this.measureQuote();
+      refreshFoldAllBtn();
+
+      // 指回原文:鼠标移到这个框上、或者光标在输入框里时,
+      // 把它是从哪一句问出来的那句话标出来
+      this.el.addEventListener("mouseenter", () => highlightSource(this.srcRange));
+      this.el.addEventListener("mouseleave", clearSourceHighlight);
+      this.inputEl.addEventListener("focus", () => highlightSource(this.srcRange));
+      this.inputEl.addEventListener("blur", clearSourceHighlight);
+
+      // 回车提交(和 input 在同一个框里找,所以不用全局变量)
+      this.inputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") { this.close(); return; }
+        if (e.key !== "Enter") return;
+
+        // 输入法选词时按的回车是"上屏",不能抢 ——
+        // 抢了就会发现:中文打一半按回车,什么都没发生
+        if (e.isComposing || e.keyCode === 229) return;
+
+        this.submit();
+      });
+
+      // 问按钮:手机上回车不好按,靠它提交
+      askBtn.addEventListener("click", () => this.submit());
+      askBtn.addEventListener("mousedown", (e) => e.preventDefault());
+
+      closeBtn.addEventListener("click", () => this.close());
+      closeBtn.addEventListener("mousedown", (e) => e.preventDefault());
+
+      // 复制答案:把结论带走
+      this.copyBtn.addEventListener("click", () => this.copyAnswer());
+      this.copyBtn.addEventListener("mousedown", (e) => e.preventDefault());
+
+      // 收起 / 展开:收起来只留一行层级标签
+      foldBtn.addEventListener("click", () => this.toggleFold());
+      foldBtn.addEventListener("mousedown", (e) => e.preventDefault());
+
+      // 点进输入框会清掉正文选中,标记一下免得触发别的逻辑
+      this.inputEl.addEventListener("mousedown", () => { ignoreNext = true; });
+      this.inputEl.addEventListener("focus",    () => { ignoreNext = true; });
+
+      // 打了半个问题还没提交,刷新也不该丢
+      this.inputEl.addEventListener("input", scheduleSave);
+
+      // 从存档重建:把当时的内容填回去(新建时这些都是空的,不执行)
+      if (opts.question) this.inputEl.value = opts.question;
+      if (opts.answer)   this.answerEl.textContent = opts.answer;
+      if (opts.title) {
+        this.titled = true;          // 有标题就不再让模型重新生成
+        this.setTitle(opts.title);
+      }
+      if (opts.folded) this.fold();
+
+      scheduleSave();
+    }
+
+    // 给这个框起一个标题:先立刻用问题兜底,再让模型补一句更准的
+    // 单独一次小请求 —— 不塞进主请求,免得答案格式被标题污染
+    async makeTitle(question, answer) {
+      if (this.titled) return;
+      this.titled = true;
+
+      // 兜底:问题本身就是个能用的标题
+      this.setTitle(question.length > 20 ? question.slice(0, 20) + "…" : question);
+
+      // 演示模式不做这一步:标题要多花一次调用,而额度是有限的
+      if (DEMO_MODE) return;
+
+      const key = localStorage.getItem("deepseek_key");
+      if (!key) return;
+
+      try {
+        const res = await fetch(API_BASE + "/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + key
+          },
+          body: JSON.stringify({
+            model: API_MODEL,
+            max_tokens: 40,
+            messages: [{
+              role: "user",
+              content: t("titlePrompt") + "\n\n"
+                     + t("titleQ") + question + "\n\n"
+                     + t("titleA") + answer.slice(0, 400)
+            }]
+          })
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        let title = (data.choices && data.choices[0] && data.choices[0].message
+                     ? data.choices[0].message.content : "").trim();
+
+        // 清掉模型偶尔带上的引号、换行
+        title = title.replace(/^[「『"'《]+|[」』"'》]+$/g, "").replace(/\s+/g, " ").trim();
+
+        if (title) this.setTitle(title.length > 26 ? title.slice(0, 26) + "…" : title);
+      } catch (e) {
+        // 标题失败就保留兜底那个,不影响答案
+      }
+    }
+
+    setTitle(text) {
+      this.titleText = text;
+      this.titleEl.textContent = text;
+      this.titleEl.classList.add("show");
+      this.updateChip();
+    }
+
+    // 收起后那个小胶囊上显示什么:有标题用标题,没有就一个 +
+    updateChip() {
+      this.chipEl.textContent = this.titleText || "+";
+    }
+
+    // 引用超长时才给它加滚动条 —— 短引用不该无端出现一条滚动条
+    // 必须等布局算完才能测,否则 scrollHeight 还没算出来
+    measureQuote() {
+      // 图片的引用区里是一张缩略图,不该被"引用限高 + 滚动"裁成半截
+      if (this.image) {
+        this.qtextEl.classList.remove("scrollable");
+        this.qtextEl.classList.add("has-img");
+        return;
+      }
+
+      const el = this.qtextEl;
+      el.classList.remove("scrollable");
+
+      // 阈值要和 CSS 里 .scrollable 的 max-height(72px)一致 ——
+      // 不一致的话,80px 的引用不限高、130px 的突然被压到 72px,中间会跳变
+      if (el.scrollHeight > 72) el.classList.add("scrollable");
+    }
+
+    focusInput() {
+      this.inputEl.focus();
+    }
+
+    // 把本窗口里所有"显示给人看"的文字重新写一遍
+    // 切语言时对每个框调一次,这样就不会有残留的旧语言
+    rerender() {
+      // 这一问带图,但引用区里的图不见了(切语言、重绘等路径可能冲掉)
+      // —— 补回去。缩略图是"我在问哪张"的唯一线索,不能丢
+      if (this.image && !this.qtextEl.querySelector(".quote-img")) {
+        this.qtextEl.textContent = "";
+        const wrap = document.createElement("span");
+        wrap.className = "thumb-wrap";
+        const t2 = document.createElement("img");
+        t2.src = this.image;
+        t2.className = "quote-img";
+        t2.style.maxWidth = "96px";
+        t2.style.maxHeight = "72px";
+        t2.style.objectFit = "cover";
+        t2.style.borderRadius = "6px";
+        wrap.appendChild(t2);
+        this.qtextEl.appendChild(wrap);
+      }
+
+      // 只给第一层留一个「正文」起点标记。
+      // 追问层不再写"第几层" —— 缩进、虚线、紫色已经说明了一切,
+      // 再写一遍就是第四遍重复,是噪音不是信息。
+      if (this.depth > 1) {
+        this.qlabelEl.style.display = "none";
+      } else {
+        this.qlabelEl.style.display = "";
+        this.qlabelEl.textContent = t("level1");
+      }
+      // 复制按钮正在显示"已复制"时不要覆盖掉那个反馈
+      if (!this.copyBtn.classList.contains("done")) {
+        this.copyBtn.textContent = t("copy");
+      }
+      this.updateChip();
+
+      // 框里的这些文字在 <template> 里,applyLang 查不到模板内部 ——
+      // 所以只能建框时按当前语言写进去,切语言时再统一重刷一遍
+      this.el.querySelector(".q").placeholder = t("askPh");
+      this.el.querySelector(".hint").textContent = t("footHint");
+      this.el.querySelector(".fold").title = t("foldTitle");
+      this.el.querySelector(".close").title = t("closeTitle");
+      this.el.querySelector(".ask").title = t("askTitle");
+      this.copyBtn.title = t("copyTitle");
+    }
+
+    close() {
+      clearSourceHighlight();   // 别让高亮留在一个已经关掉的框上
+
+      const el = this.el;
+      el.remove();
+
+      // 嵌套的子框在父框内部,随父框一起被删掉 —— 登记表也要一起清
+      for (let i = boxes.length - 1; i >= 0; i--) {
+        if (boxes[i] === this || el.contains(boxes[i].el)) boxes.splice(i, 1);
+      }
+
+      refreshFoldAllBtn();
+      scheduleSave();
+    }
+
+    // 复制答案到剪贴板,并给一个短暂的反馈
+    // 连引用一起复制 —— 只复制答案的话,离开页面就看不出在说什么
+    copyAnswer() {
+      const answer = this.answerEl.textContent.trim();
+      if (!answer) return;
+      // 只复制答案 —— 原文还在页面上,多复制一份只会让粘贴方和每次都要删
+      const text = answer;
+      const done = () => {
+        this.copyBtn.textContent = t("copied");
+        this.copyBtn.classList.add("done");
+        setTimeout(() => {
+          this.copyBtn.textContent = t("copy");
+          this.copyBtn.classList.remove("done");
+        }, 1200);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => {});
+      } else {
+        // 老浏览器兜底
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        done();
+      }
+    }
+
+    // 收起 / 展开:收起后变成贴在字后面的小胶囊
+    fold() {
+      this.folded = true;
+      this.el.classList.add("collapsed");
+      this.foldBtn.textContent = "+";
+      scheduleSave();
+    }
+
+    unfold() {
+      this.folded = false;
+      this.el.classList.remove("collapsed");
+      this.foldBtn.textContent = "−";
+      // 收起时引用是隐藏的,量不出来;展开后重新判断一次
+      requestAnimationFrame(() => this.measureQuote());
+      scheduleSave();
+    }
+
+    toggleFold() {
+      this.folded ? this.unfold() : this.fold();
+      refreshFoldAllBtn();   // 手动收起/展开后,全局按钮的文字也要跟着变
+    }
+
+    submit() {
+      const q = this.inputEl.value.trim();
+      if (!q) return;
+      this.ask(q);
+      // 不清空也不全选 —— 问题留在框里,光标默认在末尾,方便接着追问
+      this.inputEl.focus();
+    }
+
+    async ask(question) {
+      const key = localStorage.getItem("deepseek_key");
+
+      // 演示模式不需要 key;开源版本(自己填 key)照旧
+      if (!DEMO_MODE && !key) {
+        this.showError(t("noKey"), () => this.ask(question));
+        return;
+      }
+
+      // 先清空,让第一个字尽快出现(流式下不需要"…"占位)
+      this.answerEl.textContent = "";
+
+      // 看图要等一会儿(模型要先读图),先把话说出来,别让人以为没反应
+      // 模型现在慢一点,先给个话,别让人以为没反应
+      this.answerEl.classList.add("waiting");
+      this.answerEl.textContent = t("thinking");
+
+      // 追问时把父级答案整段作为背景带上 ——
+      // 不然模型只看到一个孤立的句子,不知道它在说什么
+      // 有图时,图作为内容块发过去;提示词也不再提"选中的文字"
+      const userContent = this.image
+        ? (this.parentAnswer
+            ? t("followPrev") + "\n\"\"\"\n" + this.parentAnswer + "\n\"\"\"\n\n" + t("followQ") + question
+            : t("myQuestion") + question)
+        : this.parentAnswer
+          ? t("followIntro") + "\n\n"
+            + t("followPrev") + "\n\"\"\"\n" + this.parentAnswer + "\n\"\"\"\n\n"
+            + t("followSel") + "\n\"\"\"\n" + this.text + "\n\"\"\"\n\n"
+            + t("followQ") + question
+          : t("readHere") + "\n\n" + this.text + "\n\n" + t("myQuestion") + question;
+
+      // 带图 = 内容块数组;不带图 = 普通字符串
+      const messageContent = this.image
+        ? [
+            { type: "text", text: userContent },
+            { type: "image_url", image_url: { url: this.image } }
+          ]
+        : userContent;
+
+      try {
+        const url = DEMO_MODE
+          ? DEMO_ENDPOINT
+          : API_BASE + "/chat/completions";
+
+        const headers = { "Content-Type": "application/json" };
+        if (!DEMO_MODE) headers["Authorization"] = "Bearer " + key;
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: headers,
+          body: JSON.stringify({
+            model: this.image ? API_MODEL_VISION : API_MODEL,
+            stream: true,
+            messages: [
+              {
+                role: "system",
+                content: t("sysPrompt")
+              },
+              {
+                role: "user",
+                content: messageContent
+              }
+            ]
+          })
+        });
+
+        if (!res.ok) {
+          // 不显示原始响应体 —— 401 的时候它会把你的 key 原样回显在界面上
+          const msg =
+              (DEMO_MODE && res.status === 429) ? t("demoLimit")
+            : res.status === 401 ? t("errAuth")
+            : res.status === 402 ? t("errQuota")
+            : res.status === 429 ? t("errRate")
+            : t("reqFail") + " (" + res.status + ")";
+          this.showError(msg, () => this.ask(question));
+          return;
+        }
+
+        // 流式读取:服务端每发一小块,就立刻显示出来
+        await this.readStream(res);
+
+        // 答案出来了,再补一个小请求生成标题
+        // 单独一次调用,而不是塞进主请求 —— 这样答案格式永远是干净的
+        const done = this.answerEl.textContent.trim();
+        if (done) this.makeTitle(question, done);
+
+        scheduleSave();
+
+      } catch (err) {
+        // 如果是跨域被拦,这里会走到,并且报 Failed to fetch
+        this.showError(t("errPrefix") + err.message, () => this.ask(question));
+      }
+    }
+
+    // 出错时给一句话,外加一个「重试」—— 不然断一次就得手动再问一遍
+    showError(msg, retry) {
+      this.answerEl.textContent = "";
+
+      const span = document.createElement("span");
+      span.textContent = msg;
+      this.answerEl.appendChild(span);
+
+      if (retry) {
+        this.answerEl.appendChild(document.createTextNode(" "));
+        const btn = document.createElement("button");
+        btn.className = "retry";
+        btn.type = "button";
+        btn.textContent = t("retry");
+        btn.addEventListener("click", () => {
+          this.answerEl.textContent = "";
+          retry();
+        });
+        btn.addEventListener("mousedown", (e) => e.preventDefault());
+        this.answerEl.appendChild(btn);
+      }
+      scheduleSave();
+    }
+
+    // 逐块读取 SSE 响应,边收边显示
+    // 格式形如:data: {"choices":[{"delta":{"content":"字"}}]}
+    // 最后一行是:data: [DONE]
+    async readStream(res) {
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      // 显示区先清空 —— 让第一个字直接出现,而不是先闪一个"…"
+      // 不在这里清 —— 留着"正在思考中",等第一个字到了再换掉
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // stream: true 表示"还有后续片段",不能整块解码
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE 用 \n\n 分隔事件,但也可能只给 \n,两种都拆
+        const lines = buffer.split("\n");
+        buffer = lines.pop();          // 最后一段可能被截断,留到下一轮
+
+        for (const line of lines) {
+          const text = this.parseChunk(line);
+          if (text) {
+            if (!this._streamStarted) { this.answerEl.textContent = ""; this.answerEl.classList.remove("waiting"); this._streamStarted = true; }
+            this.answerEl.textContent += text;
+          }
+        }
+      }
+
+      // 收尾:把 buffer 里剩下的一行也处理掉
+      const tail = this.parseChunk(buffer);
+      if (tail) this.answerEl.textContent += tail;
+    }
+
+    // 解析一行 SSE,取出这一小段文字;不是正文行就返回空
+    parseChunk(line) {
+      const s = line.trim();
+      if (!s || !s.startsWith("data:")) return "";
+
+      const payload = s.slice(5).trim();
+      if (payload === "[DONE]") return "";
+
+      try {
+        const obj = JSON.parse(payload);
+        const delta = obj.choices && obj.choices[0] && obj.choices[0].delta;
+        return (delta && delta.content) ? delta.content : "";
+      } catch (e) {
+        return "";   // 半截 JSON 或被截断的行,丢掉就好
+      }
+    }
+  }
+
+  // 鼠标按下:标记"正在拖选";并且点到别处时收掉「问」标记
+  document.addEventListener("mousedown", (e) => {
+    mouseDown = true;
+    if (!askMark.contains(e.target)) hideAskMark();
+  });
+
+  // 鼠标松开 = 一次选中动作做完了
+  document.addEventListener("mouseup", (e) => {
+    mouseDown = false;
+    clearTimeout(timer);
+    // 点「问」这个动作本身不该被当成一次新的选中
+    if (askMark.contains(e.target)) return;
+    handleSelection();   // 鼠标选中 → 先出「问」标记
+  });
+
+  // 整个文档上监听按键:处理键盘选中,以及 Esc
+
+  // 排障用:Ctrl+Shift+D 把正文结构复制到剪贴板(base64 会截断)
+  document.addEventListener("keydown", (e) => {
+    if (!(e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "d")) return;
+    e.preventDefault();
+    const clone = article.cloneNode(true);
+    clone.querySelectorAll("img").forEach(img => {
+      const src = img.getAttribute("src") || "";
+      img.setAttribute("src", src.slice(0, 30) + "…(" + src.length + ")");
+    });
+    // 量一量:每个框里 quote 和 askline 的 display、左边界、上边界
+    const boxes = Array.from(document.querySelectorAll(".askbox")).map((b, idx) => {
+      const r = el => {
+        if (!el) return "没有";
+        const cs = getComputedStyle(el);
+        const rc = el.getBoundingClientRect();
+        return cs.display + " L" + Math.round(rc.left) + " T" + Math.round(rc.top) + " W" + Math.round(rc.width);
+      };
+      const p = b.parentElement;
+      return "#" + idx + " [" + b.className + "] 父=" + (p ? p.tagName + "." + (p.className || "-") : "无")
+        + " | box=" + r(b)
+        + " | quote=" + r(b.querySelector(":scope > .quote"))
+        + " | askline=" + r(b.querySelector(":scope > .askline"))
+        + " | img=" + r(b.querySelector(":scope > .quote img"));
+    });
+
+    const info = "【框】" + (boxes.length ? boxes.join(" | ") : "一个都没有") + "\n【正文】";
+    const html = info + clone.innerHTML.replace(/\n\s*/g, "").slice(0, 4000);
+    navigator.clipboard.writeText(html).then(
+      () => alert("正文结构已复制(" + html.length + " 字),粘给我就行"),
+      () => alert("复制失败,可能被浏览器拦了")
+    );
+  });
+
+  document.addEventListener("keydown", (e) => {
+    const isArrowWithShift = e.shiftKey && e.key.indexOf("Arrow") === 0;
+
+    if (isArrowWithShift) {
+      // 键盘正在拖选:只出「问」标记,不动焦点
+      // 否则焦点一进输入框,后面的 Shift+方向键就选不动原文了
+      clearTimeout(timer);
+      timer = setTimeout(handleSelection, 250);
+      return;
+    }
+
+    // 在提问框的输入框里,交给框自己的处理(提交 / Esc)
+    if (e.target.closest && e.target.closest(".askbox")) return;
+
+    // Esc:先收「问」标记;没有标记时,关掉那个框
+    if (e.key === "Escape") {
+      if (pending) { hideAskMark(); return; }
+
+      const all = Array.from(document.querySelectorAll(".askbox"));
+      if (!all.length) return;
+
+      const focused = document.activeElement && document.activeElement.closest
+        ? document.activeElement.closest(".askbox")
+        : null;
+
+      // 用 close() 而不是 remove() —— 后者不会从登记表里注销
+      const target = focused || all[all.length - 1];
+      const box = boxes.find(b => b.el === target);
+      if (box) box.close();
+    }
+  });
+
+  // 滚动时标记要跟着选区走 —— 用当初存下的 range 重新算位置
+  // 选区被滚出屏幕时才收起(否则它会被夹到边上,变成一个孤零零的按钮)
+  window.addEventListener("scroll", () => {
+    if (!pending || !pending.range) return;
+
+    const end = lastVisibleRect(pending.range);
+
+    // 整段都滚出去了 → 收起
+    if (end.bottom < 0 || end.top > window.innerHeight) {
+      askMark.classList.remove("show");
+      return;
+    }
+
+    pending.end = end;
+    showAskMark(end);
+  }, { passive: true });
+
+  // ---------- 缩放 / 窗口尺寸变化 ----------
+  // 框在正文流里,浏览器自己会重排,不用管它们
+  // 只有「问」那个标记是浮在屏幕上的,要跟着重算
+  let relayoutTimer = null;
+  function relayoutMarker() {
+    clearTimeout(relayoutTimer);
+    relayoutTimer = setTimeout(() => {
+      if (pending && pending.range) {
+        const end = lastVisibleRect(pending.range);
+        pending.end = end;
+        showAskMark(end);
+      }
+    }, 80);
+  }
+
+  window.addEventListener("resize", relayoutMarker);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", relayoutMarker);
+  }
+
+  // 选中范围变化 → 延迟一下再处理
+  document.addEventListener("selectionchange", () => {
+    // 如果是我们自己聚焦输入框导致的变化,跳过,不要关框
+    if (ignoreNext) {
+      ignoreNext = false;
+      return;
+    }
+
+    clearTimeout(timer);
+
+    // 按住鼠标拖选的过程中不处理 —— 等松开由上面的 mouseup 统一处理
+    if (mouseDown) return;
+
+    // 走到这里的是键盘(或程序)造成的选中变化
+    timer = setTimeout(handleSelection, 150);
+  });
+
+  function handleSelection() {
+    const sel = window.getSelection();
+    // 图片待提问期间不要动「问」—— 插图后浏览器会保持"选中这张图",
+    // 选中文字是空的,下面的逻辑会立刻把它关掉
+    if (pending && pending.imgEl) return;
+
+    // 点到图片时浏览器会"选中这个图",但选中文字是空的 ——
+    // 照常走下去会把刚弹出的「问」立刻关掉。图片这条路自己管自己。
+    const aNode = sel.anchorNode;
+    if (aNode && aNode.nodeName === "IMG" && aNode.classList && aNode.classList.contains("inline-img")) return;
+
+    const text = sel.toString().trim();
+
+    // 只是点一下(没有选中任何文字)不算,必须真的有选中内容
+    if (!text) { hideAskMark(); return; }
+
+    // 正文可以问,答案也可以问 —— 后者就是"就着这一层再展开一层"
+    // 注意只认 .answer:不能认整个 .askbox,否则点输入框也会被当成选中
+    const inArticle = article.contains(sel.anchorNode);
+    const anchorEl  = sel.anchorNode.nodeType === 1
+                    ? sel.anchorNode
+                    : sel.anchorNode.parentElement;
+    const answerEl  = anchorEl && anchorEl.closest(".answer");
+    if (!inArticle && !answerEl) { hideAskMark(); return; }
+
+    // 只有"正文"和"答案"能问。
+    // 框里的引用、输入框、按钮都算框的一部分 —— 在那里选中再建框,
+    // 会造出一个"第一层"却嵌在别人框里的怪东西
+    const inPanel = anchorEl && anchorEl.closest(".askbox");
+    if (inPanel && !answerEl) { hideAskMark(); return; }
+
+    // 位置:取"选区最后一行",但只认屏幕内的行
+    // 全选一整篇时,最后一行在屏幕外很远 —— 拿它定位,框会一路掉到屏幕底部
+    const range = sel.getRangeAt(0);
+    const end   = lastVisibleRect(range);
+
+    // 从答案里问出来的,层级 = 那个框的层级 + 1
+    // 同时把父级答案整段带上 —— 追问时模型需要知道"那句话是在什么语境里说的"
+    let depth = 1;
+    let parentAnswer = "";
+    if (answerEl) {
+      const parentBox = answerEl.closest(".askbox");
+      depth = parentBox && parentBox._depth ? parentBox._depth + 1 : 2;
+      parentAnswer = answerEl.textContent.trim();
+    }
+
+    // 选中动作一完成,就把「问」摆在选区结尾的右下方
+    // 位置固定在选区上,不跟鼠标走 —— 它停在那儿等你点
+    // 同时留着 range:滚动时要靠它重新算位置
+    pending = { text, range, end, depth, parentAnswer };
+    showAskMark(end);
+  }
+
+  // 取选区里"屏幕内可见的最后一行"
+  // 按真正的最后一行定位会有个坑:全选一整篇时它在屏幕外,框就掉到底部去了
+  function lastVisibleRect(range) {
+    const list = range.getClientRects();
+    if (!list.length) return range.getBoundingClientRect();
+
+    let chosen = null;
+    for (const r of list) {
+      if (r.bottom > 0 && r.top < window.innerHeight) chosen = r;
+    }
+    return chosen || list[0];
+  }
+
+  // ---------- 选中后的「问」标记 ----------
+  // 选中完成就出现,位置钉在选区结尾;点它才建框
+  function showAskMark(rect) {
+    // 先显示再量尺寸:「问」和「Ask」宽度不一样,写死 40 会夹不准
+    askMark.classList.add("show");
+    const W = askMark.offsetWidth  || 40;
+    const H = askMark.offsetHeight || 24;
+
+    // 手机上:贴着选区会被系统的选中菜单和两个把手压住,根本点不到。
+    // 改成固定停在下方 —— 拇指够得着,也不会被菜单盖。
+    if (isMobileView()) {
+      // 触屏:固定在屏幕下方居中。贴着选区会被系统选中菜单和把手压住,
+      // 而"浮在展开的框上方"会落到正文中间挡住字 —— 都不如一个固定的位置
+      askMark.style.left = Math.round((window.innerWidth - W) / 2) + "px";
+      askMark.style.top  = (window.innerHeight - H - 96) + "px";
+      return;
+    }
+
+    // 摆在"选区结束"那个字的右下方;右边放不下就翻到左边,下面放不下就翻到上方
+    let left = rect.right + 8;
+    let top  = rect.bottom + 6;
+    if (left + W > window.innerWidth)  left = rect.left - W - 8;
+    if (top  + H > window.innerHeight) top  = rect.top  - H - 6;
+
+    // 最后统一夹进视口 —— 全选一整篇时,选区结尾可能在屏幕外很远
+    // 不做这一步,标记会跑到看不见的地方,等于没有
+    if (left < 6) left = 6;
+    if (top  < 6) top  = 6;
+    if (left > window.innerWidth  - W - 6) left = window.innerWidth  - W - 6;
+    if (top  > window.innerHeight - H - 6) top  = window.innerHeight - H - 6;
+
+    askMark.style.left = left + "px";
+    askMark.style.top  = top  + "px";
+  }
+
+  // 收起标记,并且作废这次选中
+  function hideAskMark() {
+    askMark.classList.remove("show");
+    pending = null;
+  }
+
+  askMark.addEventListener("mousedown", (e) => e.preventDefault());  askMark.addEventListener("click", () => {
+    if (!pending) return;
+
+    const p = pending;
+    hideAskMark();
+
+    const box = new AskBox(p.text, p.range, p.depth, p.parentAnswer,
+      { image: p.image, imgEl: p.imgEl });
+    box.focusInput();   // 点了「问」就是明确要打字,这时才抢焦点
+  });
+
+  // ---------- API key 的存取 ----------
+  const keyInput = document.getElementById("keyInput");
+  const keyState = document.getElementById("keyState");
+  function refreshKeyState() {
+    if (DEMO_MODE) {
+      // 演示模式没有 key 可填:把输入框和保存按钮收起来,只留一句说明
+      document.getElementById("keyInput").style.display = "none";
+      document.getElementById("keySave").style.display  = "none";
+      keyState.textContent = t("demoMode");
+      return;
+    }
+
+    const k = localStorage.getItem("deepseek_key");
+    // 显示前几位而不是尾号:粘贴时你看到的是开头,认起来更快
+    keyState.textContent = k
+      ? t("keySaved") + " " + (k.length > 7 ? k.slice(0, 7) + "…" : k)
+      : t("keyEmpty");
+  }
+
+  document.getElementById("keySave").addEventListener("click", () => {
+    const v = keyInput.value.trim();
+    if (!v) return;
+    localStorage.setItem("deepseek_key", v);
+    keyInput.value = "";
+    refreshKeyState();
+  });
+
+  // 关键:阻止默认行为,否则鼠标按下时输入框失焦,还没点到按钮就已经触发了收起逻辑
+  document.getElementById("keySave").addEventListener("mousedown", (e) => e.preventDefault());
+
+  refreshKeyState();
+
+  // ---------- 占位提示 ----------
+  // 占位提示只看 DOM 自己空不空(CSS 的 :empty)。
+  // 下面这个函数只负责"把真的空清理干净",不再记任何状态。
+  // 正文里的图片一律限高限宽 —— 不靠样式表,直接写在元素上。
+  // 样式表可能没刷新(本地 file:// 缓存很顽固),那样一张截图会按原尺寸铺满。
+  function constrainImages() {
+    article.querySelectorAll("img").forEach(img => {
+      if (img.classList.contains("quote-img")) return;   // 框里的缩略图不管
+      img.style.width = "72px";
+      img.style.height = "72px";
+      img.style.objectFit = "cover";
+      img.style.display = "inline-block";
+    });
+  }
+
+  function refreshPlaceholder() {
+    const text = article.textContent.replace(/[\s\u200b\u200c\u200d\ufeff]/g, "");
+
+    // 浏览器删光文字后常留一个 <br> 或空文本节点 —— 那也算"空"
+    const kids = Array.from(article.childNodes);
+    const onlyBreak = kids.every(n =>
+      (n.nodeType === 3 && !n.textContent.replace(/[\s\u200b\ufeff]/g, "")) ||
+      (n.nodeType === 1 && n.tagName === "BR")
+    );
+
+    if (!text && onlyBreak && article.innerHTML !== "") {
+      article.innerHTML = "";   // 真清空,让 :empty 成立
+    }
+
+    constrainImages();
+    article.classList.remove("is-empty");   // 清掉老版本留下的类
+  }
+
+  article.addEventListener("blur", refreshPlaceholder);
+  article.addEventListener("input", refreshPlaceholder);
+
+  // 光靠 input/blur 不够:程序插入内容(粘贴图片、导入、恢复存档)
+  // 都不会触发它们,占位提示就一直挂在正文上,和文字叠在一起。
+  // 直接盯 DOM,谁改的都算数。
+  new MutationObserver(refreshPlaceholder).observe(article, {
+    childList: true,
+    subtree: true,
+    characterData: true
+  });
+
+  // ---------- 粘贴只保留纯文本 ----------
+  // 否则会带进字体、颜色、超链接,把阅读区弄脏
+  article.addEventListener("paste", (e) => {
+    const cd = e.clipboardData || window.clipboardData;
+    if (e._inlineHandled) return;   // 捕获层已经插过了
+
+    // 有图就先处理图 —— 一次可能贴好几张,全都插进来
+    const imgs = Array.from(cd.items || []).filter(i => (i.type || "").startsWith("image/"));
+    if (imgs.length) {
+      e.preventDefault();
+      imgs.forEach(item => {
+        const file = item.getAsFile();
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => insertImage(reader.result);
+        reader.readAsDataURL(file);
+      });
+      return;
+    }
+
+    e.preventDefault();
+    const text = cd.getData("text/plain");
+    document.execCommand("insertText", false, text);
+    refreshPlaceholder();   // 粘完正文就不是空了
+  });
+
+  // 点图片 = 对这张图提问。
+  // 图片里的文字选不中,所以这里用"点击"代替"选中"。
+  article.addEventListener("click", (e) => {
+    const img = e.target;
+    if (!img || img.tagName !== "IMG" || !img.classList.contains("inline-img")) return;
+
+    const r = img.getBoundingClientRect();
+    pending = {
+      text: "",
+      range: null,
+      image: img.src,
+      imgEl: img,
+      end: { left: r.left, right: r.right, top: r.top, bottom: r.bottom },
+      depth: 1,
+      parentAnswer: ""
+    };
+    showAskMark(pending.end);
+  });
+
+  // 点引用区的缩略图 → 全屏看原图;点一下关闭
+  {
+    const viewer = document.getElementById("imgView");
+    const bigImg = viewer.querySelector("img");
+    viewer.addEventListener("click", () => viewer.classList.remove("show"));
+
+    document.addEventListener("click", (e) => {
+      const t2 = e.target;
+      if (t2 && t2.classList && t2.classList.contains("quote-img")) {
+        bigImg.src = t2.src;
+        viewer.classList.add("show");
+      }
+    });
+
+    // 正文里的图:双击看原图(单击留给「问」)
+    document.addEventListener("dblclick", (e) => {
+      const t3 = e.target;
+      if (t3 && t3.tagName === "IMG" && t3.classList.contains("inline-img")) {
+        bigImg.src = t3.src;
+        viewer.classList.add("show");
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") viewer.classList.remove("show");
+    });
+  }
+
+  // 手机上没有"粘贴图片"这回事,给一个入口:选相册/拍照
+  {
+    const imgBtn = document.getElementById("imgBtn");
+    const imgPick = document.getElementById("imgPick");
+    imgBtn.addEventListener("click", () => imgPick.click());
+    imgPick.addEventListener("change", () => {
+      const file = imgPick.files && imgPick.files[0];
+      imgPick.value = "";           // 清掉,同一张图还能再选一次
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => insertImage(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 把图片插到光标处
+  // 焦点不在正文里时,浏览器会自己把图片塞进页面 —— 那样图会落在
+  // #article 外面,尺寸样式全不生效,点它也不会出「问」。
+  // 所以在 document 上再兜一层,抢在默认行为之前把它收进来。
+  document.addEventListener("paste", (e) => {
+    if (e._inlineHandled) return;
+    const cd = e.clipboardData || window.clipboardData;
+    const imgs = Array.from(cd.items || []).filter(i => (i.type || "").startsWith("image/"));
+    if (!imgs.length) return;
+    e._inlineHandled = true;   // 捕获阶段在最前面,标记要在这里打
+
+    e.preventDefault();
+    imgs.forEach(item => {
+      const file = item.getAsFile();
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => insertImage(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }, true);
+
+  function insertImage(dataUrl) {
+    // 图单独占一个块,块后面跟一个空段落 —— 打字就落在段落里,不会被图挤到同一行
+    const hold = document.createElement("div");
+    hold.className = "img-hold";
+
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    img.className = "inline-img";
+    img.alt = "";
+
+    // 右上角的 × —— 看得见,不用记快捷键
+    const x = document.createElement("button");
+    x.className = "img-x";
+    x.type = "button";
+    x.textContent = "×";
+    x.title = t("removeImage");
+    x.setAttribute("contenteditable", "false");
+    x.addEventListener("click", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      hold.remove();
+      refreshPlaceholder();
+      scheduleSave();
+    });
+
+    hold.appendChild(img);
+    hold.appendChild(x);
+
+    // 后面这个空段落就是"打字的地方" —— 没有它,光标只能停在图旁边
+    const slot = document.createElement("p");
+    slot.appendChild(document.createElement("br"));
+
+    const sel = window.getSelection();
+    const insideArticle = sel && sel.rangeCount && article.contains(sel.anchorNode);
+    const anchorEl = insideArticle
+      ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement)
+      : null;
+    const inBox = anchorEl && anchorEl.closest(".askbox");
+
+    if (inBox) {
+      // 光标在框里时,图插到框后面 —— 图属于正文,不属于框
+      inBox.after(hold);
+      hold.after(slot);
+    } else if (insideArticle) {
+      const r = sel.getRangeAt(0);
+      r.deleteContents();
+      // 插在光标所在的块之后,而不是硬塞进段落中间
+      const block = anchorEl && anchorEl.closest("p, li, blockquote, h1, h2, h3, h4");
+      if (block) {
+        block.after(hold);
+        hold.after(slot);
+      } else {
+        r.insertNode(hold);
+        const r2 = document.createRange();
+        r2.setStartAfter(hold);
+        r2.collapse(true);
+        r2.insertNode(slot);
+      }
+    } else {
+      article.appendChild(hold);
+      article.appendChild(slot);
+    }
+
+    // 光标放进空段落里
+    const r3 = document.createRange();
+    r3.selectNodeContents(slot);
+    r3.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(r3);
+
+    refreshPlaceholder();
+    scheduleSave();
+
+    const rect = img.getBoundingClientRect();
+    pending = {
+      text: "", image: dataUrl, imgEl: img,
+      end: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
+      depth: 1, parentAnswer: ""
+    };
+    showAskMark(pending.end);
+  }
+  function caretNeighborIsBox(container, offset, dir) {
+    if (container.nodeType === 3) {
+      // 文本节点:只有恰好在这段文字的头/尾,才可能删到旁边的框
+      if (dir < 0 && offset > 0) return false;
+      if (dir > 0 && offset < container.length) return false;
+
+      let sib = dir < 0 ? container.previousSibling : container.nextSibling;
+      while (sib && sib.nodeType === 3 && !sib.length) {
+        sib = dir < 0 ? sib.previousSibling : sib.nextSibling;
+      }
+      return !!(sib && sib.nodeType === 1 && sib.classList.contains("askbox"));
+    }
+
+    const child = container.childNodes[dir < 0 ? offset - 1 : offset];
+    return !!(child && child.nodeType === 1 && child.classList.contains("askbox"));
+  }
+
+  article.addEventListener("beforeinput", (e) => {
+    if (e.inputType !== "deleteContentBackward" && e.inputType !== "deleteContentForward") return;
+
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+
+    const r = sel.getRangeAt(0);
+    const dir = e.inputType === "deleteContentBackward" ? -1 : 1;
+
+    // 选中了一段(而不是一条光标):如果这段里包含框,也不许删
+    if (!r.collapsed) {
+      const frag = r.cloneContents();
+      if (frag.querySelector && frag.querySelector(".askbox")) e.preventDefault();
+      return;
+    }
+
+
+    if (caretNeighborIsBox(r.startContainer, r.startOffset, dir)) {
+      e.preventDefault();
+    }
+  });
+
+  // 兜底:万一还是被删了(剪切、拖拽、撤销之类),
+  // 把已经不在页面上、却还留在登记表里的框清掉,免得后面操作到幽灵
+  new MutationObserver(() => {
+    const alive = boxes.filter(b => b.el.isConnected);
+    if (alive.length !== boxes.length) {
+      boxes.length = 0;
+      alive.forEach(b => boxes.push(b));
+      refreshFoldAllBtn();
+    }
+  }).observe(article, { childList: true, subtree: true });
+
+  refreshPlaceholder();
+
+  // ---------- 存储 ----------
+  // 存什么:正文 + 每个框的{引用、层、问、答、标题、收起态}
+  // 怎么定位:锚点 Range 不能直接存,存成"正文里第几个字符",
+  //          恢复时按这个偏移量把光标重建出来
+  // 注意:两个走文本的函数都要跳过框内部的文字 ——
+  //      否则框里的引用/答案会被算进正文,偏移量就全错了
+  const STORE_KEY = "inline_doc_v1";
+
+  // 按文档顺序遍历正文的文字节点,跳过所有框内部的
+  function eachTextNode(fn) {
+    const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const p = node.parentElement;
+        return p && p.closest(".askbox") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    let node;
+    while ((node = walker.nextNode())) {
+      if (fn(node) === false) return;
+    }
+  }
+
+  // 这个框前面有多少个"正文"字符
+  // 注意顺序:必须先判断"是不是走到这个框了",再判断"要不要跳过框里的字"。
+  // 反过来的话,框内的文字全被过滤,永远走不到停止条件,偏移量会一路算到文末
+  function offsetOfBox(el) {
+    let acc = 0;
+    const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (el.contains(node)) break;                 // 走到这个框自己,停
+      const p = node.parentElement;
+      if (p && p.closest(".askbox")) continue;      // 前面那些框里的字,不算正文
+      acc += node.nodeValue.length;
+    }
+    return acc;
+  }
+
+  function rangeAtOffset(offset) {
+    let acc = 0, found = null;
+    eachTextNode(node => {
+      const len = node.nodeValue.length;
+      if (acc + len >= offset) {
+        const r = document.createRange();
+        r.setStart(node, Math.max(0, Math.min(len, offset - acc)));
+        r.collapse(true);
+        found = r;
+        return false;
+      }
+      acc += len;
+    });
+
+    if (found) return found;
+
+    // 落在末尾(或者正文里没字了):放到最后
+    const r = document.createRange();
+    r.selectNodeContents(article);
+    r.collapse(false);
+    return r;
+  }
+
+  // 把当前状态打包成一份可以存/可以导出的快照
+  function buildSnapshot() {
+    // 正文要存"没有框的版本" —— 否则恢复时会连框一起读回来,出现两份
+    const clone = article.cloneNode(true);
+    clone.querySelectorAll(".askbox").forEach(el => el.remove());
+
+    const list = boxes.map((b, i) => ({
+      quote:  b.text,
+      depth:  b.depth,
+      q:      b.inputEl.value,
+      a:      b.answerEl.textContent,
+      title:  b.titleText,
+      folded: b.folded,
+      offset: b.depth === 1 ? offsetOfBox(b.el) : 0,   // 追问不靠偏移量,靠父框
+      // 有图的话记下它是正文里的第几张 —— 不存 base64,
+      // 图本身已经在 html 里存了一份
+      imgIndex: b.image
+        ? Array.from(article.querySelectorAll("img.inline-img")).indexOf(b.imgEl)
+        : -1,
+      // 父框按序号记 —— 恢复时如果靠"最近一个上一层"去猜,
+      // 有两条链的时候第三层可能挂到另一条链的第二层下面。
+      // 取"包着它的框里,层级最深的那一个",也就是它的直接父框
+      parent: (() => {
+        if (b.depth === 1) return -1;
+        let idx = -1, best = -1;
+        boxes.forEach((x, j) => {
+          if (x !== b && x.el.contains(b.el) && x.depth > best) { best = x.depth; idx = j; }
+        });
+        return idx;
+      })()
+    }));
+
+    return { v: 1, build: BUILD, html: clone.innerHTML, boxes: list };
+  }
+
+  function saveDoc() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(buildSnapshot()));
+    } catch (e) {
+      // 存不下(隐私模式、配额满)。图片很占地方,这件事必须说出来 ——
+      // 否则用户以为存住了,刷新之后才发现全没了
+      const s = document.getElementById("keyState");
+      if (s) {
+        s.textContent = t("storageFull");
+        s.style.color = "#c0392b";
+        setTimeout(() => { s.style.color = ""; refreshKeyState(); }, 6000);
+      }
+    }
+  }
+
+  let saveTimer = null;
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveDoc, 400);
+  }
+
+  function restoreFrom(data) {
+    if (!data || typeof data.html !== "string") return false;
+
+    article.innerHTML = data.html;
+
+    const built = [];
+    (data.boxes || []).forEach(d => {
+      // 父框按存档里的序号取,不再靠猜
+      const pi = (typeof d.parent === "number") ? d.parent : -1;
+      const parent = pi >= 0 ? built[pi] : null;
+
+      const anchor = d.depth === 1 ? rangeAtOffset(d.offset || 0) : null;
+
+      // 图按索引找回来 —— 存档里只记了"第几张图",base64 在正文 HTML 里
+      let imgEl = null, imgSrc = "";
+      if (typeof d.imgIndex === "number" && d.imgIndex >= 0) {
+        const imgs = article.querySelectorAll("img.inline-img");
+        imgEl = imgs[d.imgIndex] || null;
+        if (imgEl) imgSrc = imgEl.src;
+      }
+
+      const box = new AskBox(d.quote, anchor, d.depth,
+        parent ? parent.answerEl.textContent : "", {
+          image: imgSrc,
+          imgEl: imgEl,
+          parent: parent || null,
+          question: d.q,
+          answer: d.a,
+          title: d.title,
+          folded: d.folded
+        });
+      built.push(box);
+    });
+
+    refreshPlaceholder();
+    refreshFoldAllBtn();
+    return true;
+  }
+
+  // 第一次打开时的示例:极短的文字 + 四种形态的批注
+  // 单个 / 有答案 / 同级两条 / 再深一层 —— 样式要能一次看全
+  const SAMPLE = {
+    zh: {
+      paras: [
+        "试着点一下旁边的带线小字看看",
+        "再拖动选中文字试试",
+        "随便问一点东西 ↑",
+        "在回答区域再次选中文字试试",
+        "你已经学会了,点击页面右上角的「清空」按钮开始你的心流阅读体验吧~"
+      ],
+      notes: [
+        { find: "看看", quote: "看看", title: "点开我",
+          q: "这是什么?",
+          a: "答案会出现在你提问的地方。试着选中我这句话里的任意一部分,再点「问」。" }
+      ]
+    },
+    en: {
+      paras: [
+        "Try clicking the underlined words beside you",
+        "Then drag to select some text",
+        "Ask it something ↑",
+        "Try selecting inside an answer",
+        "You have got it. Hit Clear at the top right and start reading your way."
+      ],
+      notes: [
+        { find: "beside", quote: "beside", title: "Click me",
+          q: "What is this?",
+          a: "Answers appear right where you ask. Try selecting part of this sentence and hitting Ask." }
+      ]
+    }
+  };
+
+  // 第一次打开时的示例:一段能读的文字 + 三种形态的批注
+  // 只在从没打开过的时候塞一次,清空之后不会再冒出来
+  let seedSignature = null;   // 播种时正文的 HTML(不含框),用来判断"用户有没有动过"
+
+  function cleanArticleHTML() {
+    const clone = article.cloneNode(true);
+    clone.querySelectorAll(".askbox").forEach(el => el.remove());
+    return clone.innerHTML;
+  }
+
+  // 正文还是原封不动的示例吗(框里的答案也没被问过)
+  // 正文是不是"某一种语言的示例"。不依赖播种时的签名 ——
+  // 用户可能刷新过、清空过,签名早就丢了,但正文还是那几段
+  // 正文是不是已经是这个语言的示例了
+  function sampleAlreadyIn(target) {
+    const head = normalize(SAMPLE[target].paras[0]).slice(0, 12);
+    return head && cleanText().startsWith(head);
+  }
+
+  function looksLikeSample() {
+    // 只比第一段的开头 —— 全文比对太脆(框插进段落会改动节点结构)
+    const cur = cleanText();
+    return ["zh", "en"].some(L => {
+      const head = normalize(SAMPLE[L].paras[0]).slice(0, 12);
+      return head && cur.startsWith(head);
+    });
+  }
+
+  function normalize(s) {
+    return s.replace(/[\s\u200b\u200c\u200d\ufeff]/g, "");
+  }
+
+  function cleanText() {
+    const clone = article.cloneNode(true);
+    clone.querySelectorAll(".askbox").forEach(el => el.remove());
+    return normalize(clone.textContent);
+  }
+
+  // 把示例正文换成另一种语言:只动段落文字,不重建框。
+  // 框会尽量留在原来那句后面;找不到对应文字就排到段尾。
+  function retranslateSample(toLang) {
+    const S = SAMPLE[toLang];
+    if (!S) return false;
+
+    const ps = Array.from(article.children).filter(el => el.tagName === "P");
+    if (!ps.length) return false;
+
+    ps.forEach((p, i) => {
+      const text = S.paras[i];
+      if (typeof text !== "string") return;
+
+      // 先把这一段的框摘下来
+      const boxesInP = Array.from(p.children).filter(el => el.classList.contains("askbox"));
+      boxesInP.forEach(el => el.remove());
+
+      p.textContent = text;
+
+      // 再按引用把那句切开,把框插回去
+      const node = p.firstChild;
+      if (!node || node.nodeType !== 3) {
+        boxesInP.forEach(el => p.appendChild(el));
+        return;
+      }
+
+      let base = 0;
+      let cur = node;
+      boxesInP.forEach(el => {
+        const quote = (el.querySelector(".qtext") || {}).textContent || "";
+        const idx = quote ? text.indexOf(quote, base) : -1;
+
+        if (idx < 0) { p.appendChild(el); return; }   // 找不到就排到段尾
+
+        const cut = idx + quote.length;
+        const after = cur.splitText(cut - base);
+        p.insertBefore(el, after);
+        cur = after;
+        base = cut;
+      });
+    });
+
+    // 示例自带的那些问答也一起换成目标语言(只有 _seedAnswer 存在的是示例自带的)
+    const seeded = boxes.filter(b => typeof b._seedAnswer === "string");
+    const slots = [];
+    S.notes.forEach(n => {
+      slots.push(n);
+      (n.kids || []).forEach(k => {
+        slots.push(k);
+        (k.kids || []).forEach(g => slots.push(g));
+      });
+    });
+
+    seeded.forEach((b, i) => {
+      const n = slots[i];
+      if (!n) return;
+
+      // 引用和标题总是换(它们是"这段讲什么",不是你的话)
+      b.text = n.quote || b.text;
+      b.qtextEl.textContent = b.text;
+      if (n.title) b.setTitle(n.title);
+
+      // 问答只在这条从来没被问过时才换 —— 否则会把你问出来的答案冲掉
+      const untouched = b.answerEl.textContent === b._seedAnswer;
+      if (untouched && typeof n.q === "string") b.inputEl.value = n.q;
+      if (untouched && typeof n.a === "string") {
+        b.answerEl.textContent = n.a;
+        b._seedAnswer = n.a;
+      }
+    });
+
+    return true;
+  }
+
+  function sampleUntouched() {
+    return looksLikeSample();
+  }
+
+  function seedExample(force) {
+    if (!force) {
+      if (localStorage.getItem("inline_seen")) return;
+      localStorage.setItem("inline_seen", "1");
+    }
+
+    // 重播种时先把旧的示例框清掉
+    boxes.slice().forEach(b => b.close());
+
+    const S = SAMPLE[lang] || SAMPLE.zh;
+    article.innerHTML = S.paras.map(t2 => "<p>" + t2 + "</p>").join("");
+    seedSignature = cleanArticleHTML();
+
+    // 在第几段里找那句话,把批注插到它后面
+    function rangeAfter(str) {
+      const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        const i = node.nodeValue.indexOf(str);
+        if (i >= 0) {
+          const r = document.createRange();
+          r.setStart(node, i + str.length);
+          r.collapse(true);
+          return r;
+        }
+      }
+      return null;
+    }
+
+    S.notes.forEach(n => {
+      const r = rangeAfter(n.find);
+      if (!r) return;
+
+      const box = new AskBox(n.quote, r, 1, "", {
+        question: n.q,
+        answer: n.a,
+        title: n.title,
+        folded: true          // 全部收着:示例不是"展示",是"等人点"
+      });
+      box._seedAnswer = n.a || "";
+
+      (n.kids || []).forEach(k => {
+        const kid = new AskBox(k.quote, null, 2, box.answerEl.textContent, {
+          parent: box, question: k.q, answer: k.a, title: k.title,
+          folded: true      // 同级两条都收着,看的就是"两条并排"
+        });
+        kid._seedAnswer = k.a || "";
+
+        (k.kids || []).forEach(g => {
+          const gc = new AskBox(g.quote || "", null, 3, kid.answerEl.textContent, {
+            parent: kid, question: g.q, answer: g.a, title: g.title, folded: true
+          });
+          gc._seedAnswer = g.a || "";
+        });
+      });
+    });
+
+    refreshPlaceholder();
+    refreshFoldAllBtn();
+  }
+
+  function loadDoc() {
+    let data;
+    try {
+      data = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    } catch (e) { }
+
+    if (!data || typeof data.html !== "string") {
+      seedExample();
+      return;
+    }
+    restoreFrom(data);
+  }
+
+  // 正文改了就存
+  article.addEventListener("input", scheduleSave);
+
+  // ---------- 导出 ----------
+  // Markdown 是这东西真正的产出物:正文 + 每一层的问答,都还在原来的位置上。
+  // 层级用引用符号表示 —— 第几层就是几个 ">",所以整棵追问树在纯文本里也能原样读
+  function boxToMarkdown(el, level) {
+    const b = boxes.find(x => x.el === el);
+    if (!b) return "";
+
+    const pad = ">".repeat(level);
+    const q = b.inputEl.value.trim();
+    const a = b.answerEl.textContent.trim();
+
+    const parts = [];
+    if (q) parts.push(pad + " **问:** " + q);
+    if (a) {
+      const ls = a.split(/\n+/);
+      parts.push(pad + " **答:** " + ls[0]);
+      ls.slice(1).forEach(l => parts.push(pad + " " + l));
+    }
+
+    let s = parts.join("\n");
+
+    // 追问挂在框内部的 .thread 里,层级 + 1
+    const thread = el.querySelector(":scope > .thread");
+    if (thread) {
+      thread.querySelectorAll(":scope > .askbox").forEach(child => {
+        const sub = boxToMarkdown(child, level + 1);
+        if (sub) s += "\n\n" + sub;
+      });
+    }
+    return s;
+  }
+
+  function articleToMarkdown() {
+    const out = [];
+    const BLOCK = /^(P|DIV|LI|H1|H2|H3|H4|BLOCKQUOTE)$/;
+    const HEAD  = { H1: "# ", H2: "## ", H3: "### ", H4: "#### " };
+
+    (function walk(node) {
+      if (node.nodeType === 3) {
+        if (node.nodeValue.trim()) out.push(node.nodeValue);
+        return;
+      }
+      if (node.nodeType !== 1) return;
+
+      // 标题要带 #,否则导出的文章会丢掉层级
+      if (HEAD[node.tagName]) {
+        out.push("\n\n" + HEAD[node.tagName]);
+        node.childNodes.forEach(walk);
+        out.push("\n\n");
+        return;
+      }
+
+      // 框:在它原来的位置展开成问答块
+      if (node.classList.contains("askbox")) {
+        const md = boxToMarkdown(node, 1);
+        if (md) out.push("\n\n" + md + "\n\n");
+        return;
+      }
+
+      const isBlock = BLOCK.test(node.tagName);
+      if (isBlock) out.push("\n\n");
+      node.childNodes.forEach(walk);
+      if (isBlock) out.push("\n\n");
+    })(article);
+
+    return out.join("")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim() + "\n";
+  }
+
+  // 默认文件名:日期 + 时间,够区分又不啰嗦
+  function defaultFileName() {
+    const d = new Date();
+    const p = n => String(n).padStart(2, "0");
+    return "inline-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate())
+         + "-" + p(d.getHours()) + p(d.getMinutes());
+  }
+
+  function askFileName() {
+    const def = defaultFileName();
+    const v = prompt(t("fileNamePrompt"), def);
+    if (v === null) return null;   // 取消
+    // 文件名里不能出现的字符,换成下划线
+    return (v.trim() || def).replace(/[\\/:*?"<>|]/g, "_");
+  }
+
+  function download(name, text, mime) {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const name = askFileName();
+    if (!name) return;
+    const md = "# " + name + "\n\n" + articleToMarkdown();
+    download(name + ".md", md, "text/markdown;charset=utf-8");
+  });
+
+  document.getElementById("archiveBtn").addEventListener("click", () => {
+    const name = askFileName();
+    if (!name) return;
+    download(name + ".json", JSON.stringify(buildSnapshot(), null, 2), "application/json");
+  });
+
+  // 导入存档:换浏览器、换电脑时把这堆东西搬回来
+  const importInput = document.createElement("input");
+  importInput.type = "file";
+  importInput.accept = ".json,application/json";
+  importInput.addEventListener("change", async () => {
+    const f = importInput.files && importInput.files[0];
+    if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!data || typeof data.html !== "string") throw new Error("bad");
+
+      boxes.slice().forEach(b => b.close());   // 先清掉现在的
+      restoreFrom(data);
+      saveDoc();
+    } catch (e) {
+      alert(t("importFailed"));
+    }
+    importInput.value = "";
+  });
+
+  document.getElementById("importBtn").addEventListener("click", () => importInput.click());
+
+  ["exportBtn", "archiveBtn", "importBtn"].forEach(id => {
+    document.getElementById(id).addEventListener("mousedown", (e) => e.preventDefault());
+  });
+
+  // ---------- 一键收起所有框 ----------
+  const foldAllBtn = document.getElementById("foldAllBtn");
+  foldAllBtn.addEventListener("click", toggleAllBoxes);
+  // 别让按钮抢焦点,否则点它的一瞬间选中状态就乱了
+  foldAllBtn.addEventListener("mousedown", (e) => e.preventDefault());
+  refreshFoldAllBtn();
+
+  // ---------- 语言切换 ----------
+  // 把所有带 data-i18n 标记的文字重新写一遍
+  function applyLang() {
+    document.title            = t("title");
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+
+    // 阅读区的占位提示(由 CSS 的 content: attr(data-hint) 渲染)
+    article.dataset.hint = t("emptyHint");
+
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+      el.placeholder = t(el.dataset.i18nPh);
+    });
+    document.querySelectorAll("[data-i18n-title]").forEach(el => {
+      el.title = t(el.dataset.i18nTitle);
+    });
+
+    // 已经开着的框也要跟着变 —— 否则它们会停在旧语言
+    boxes.forEach(b => b.rerender());
+
+    // 这两个要看当前状态,不能直接取固定文案
+    refreshKeyState();
+    refreshFoldAllBtn();
+    document.getElementById("langBtn").textContent = lang === "zh" ? "EN" : "中文";
+
+    // 如果正文还是原封不动的示例(你没改过、也没问过),
+    // 切语言时把它一起换掉 —— 否则中文示例会留在英文界面里
+    if (sampleUntouched()) {
+      // 正文还是示例原文 → 就地翻译,保留你已经问过的东西
+      if (!retranslateSample(lang)) seedExample(true);
+      refreshPlaceholder();
+      refreshFoldAllBtn();
+    }
+  }
+
+  document.getElementById("langBtn").addEventListener("click", () => {
+    lang = (lang === "zh") ? "en" : "zh";
+    localStorage.setItem("inline_lang", lang);
+    applyLang();
+  });
+  document.getElementById("langBtn").addEventListener("mousedown", (e) => e.preventDefault());
+
+  // 先跑一次,把静态文字按当前语言写进去
+  applyLang();
+
+  // 再把上次的内容恢复回来(正文 + 所有框)
+  loadDoc();
+
+  // 恢复出来的示例可能停在另一种语言(上次存的),这里对齐一次。
+  // 自己的文章不会被碰 —— 只有"正文还是示例原文"时才动
+  if (looksLikeSample() && !sampleAlreadyIn(lang)) {
+    retranslateSample(lang);
+    refreshPlaceholder();
+    refreshFoldAllBtn();
+  }
+
+  // ---------- 清空 ----------
+  const clearBtn = document.getElementById("clearBtn");
+  clearBtn.addEventListener("click", () => {
+    if (!confirm(t("clearConfirm"))) return;
+
+    boxes.slice().forEach(b => b.close());
+    article.innerHTML = "";
+    localStorage.removeItem(STORE_KEY);
+
+    refreshPlaceholder();
+    refreshFoldAllBtn();
+  });
+  clearBtn.addEventListener("mousedown", (e) => e.preventDefault());
+</script>
+
+</body>
+</html>
