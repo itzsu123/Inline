@@ -23,6 +23,8 @@
 
 <p align="center"><sub>单文件、零依赖。下载后双击用浏览器打开</sub></p>
 
+<p align="center"><sub>手机不用下载,直接开 <a href="https://itzsu123.github.io/Inline/Inline.html">这个链接</a> —— 存储按域名走,换版本也不会丢</sub></p>
+
 
 <p align="center">
   <img src="assets/demo-2.png" width="620" alt="选中「沉没成本」，答案就落在这一句下面">

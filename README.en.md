@@ -23,6 +23,8 @@ One `Inline.html`. No dependencies. Open it and read.
 
 <p align="center"><sub>One file, no dependencies. Download it and open it in a browser</sub></p>
 
+<p align="center"><sub>On a phone, don't download it — just open <a href="https://itzsu123.github.io/Inline/Inline.html">this link</a></sub></p>
+
 <p align="center">
   <img src="assets/demo-2.png" width="620" alt="Select a word and the answer lands under that sentence">
 </p>
