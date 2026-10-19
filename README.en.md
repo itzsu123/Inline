@@ -1,5 +1,9 @@
 # Inline · Understand where you read
 
+A single-file reading tool. Select text, a Q&A panel opens right there. Follow-ups stack into a chain. When you're done, collapse them: the article is an article again, with a few faint underlined notes left behind.
+
+One `Inline.html`. No dependencies. Open it and read.
+
 <p align="center">
   <img src="assets/logo.svg#gh-light-mode-only" alt="Inline" width="330">
   <img src="assets/logo-dark.svg#gh-dark-mode-only" alt="Inline" width="330">
@@ -11,10 +15,6 @@
 </p>
 
 <p align="center"><sub><a href="README.md">中文</a> · <b>English</b></sub></p>
-
-A single-file reading tool. Select text, a Q&A panel opens right there. Follow-ups stack into a chain. When you're done, collapse them: the article is an article again, with a few faint underlined notes left behind.
-
-One `Inline.html`. No dependencies. Open it and read.
 
 <p align="center">
   <a href="https://github.com/itzsu123/Inline/releases/latest/download/Inline.html">
