@@ -1,17 +1,13 @@
 # Inline · 看到哪，理解到哪
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
-    <img src="assets/logo.svg" alt="Inline" width="330">
-  </picture>
+  <img src="assets/logo.svg#gh-light-mode-only" alt="Inline" width="330">
+  <img src="assets/logo-dark.svg#gh-dark-mode-only" alt="Inline" width="330">
 </p>
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/tagline-dark.svg">
-    <img src="assets/tagline.svg" alt="答案应该长在提问的地方，而不是别的地方。" width="700">
-  </picture>
+  <img src="assets/tagline.svg#gh-light-mode-only" alt="答案应该长在提问的地方，而不是别的地方。" width="700">
+  <img src="assets/tagline-dark.svg#gh-dark-mode-only" alt="答案应该长在提问的地方，而不是别的地方。" width="700">
 </p>
 
 <p align="center"><sub><b>中文</b> · <a href="README.en.md">English</a></sub></p>
