@@ -973,7 +973,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-19 10:56";
+  const BUILD = "2026-10-19 11:05";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
@@ -1044,6 +1044,7 @@
       sysPrompt:        "用大白话解释用户选中的内容,只回答他问的那一点,不要展开无关的东西。",
       followIntro:      "这是一个追问,针对你上一轮的回答。",
       followPrev:       "上一轮你的回答是:",
+      followSrc:        "原文里相关的一段:",
       followSel:        "用户选中了其中的一句:",
       followQ:          "他的问题是:",
       readHere:         "我读到这里:",
@@ -1106,6 +1107,7 @@
       sysPrompt:        "Explain the selected passage in plain language. Answer only the point asked, and do not pad it with anything unrelated.",
       followIntro:      "This is a follow-up about your previous answer.",
       followPrev:       "Your previous answer was:",
+      followSrc:        "The relevant passage from the article:",
       followSel:        "The user selected one sentence from it:",
       followQ:          "Their question is: ",
       readHere:         "I am reading this:",
@@ -1203,6 +1205,18 @@
   //  提问框:每次选中都克隆一个新的,所以可以同时存在好几个
   //  每个框自己带着"它锚定的那段文字",互不干扰
   // ============================================================
+  // 取选区所在的那一个段落,作为"原文上下文"。
+  // 太长的截断 —— 追问要的是语境,不是全文。
+  function paragraphContext(range) {
+    let node = range.startContainer;
+    if (node && node.nodeType === 3) node = node.parentElement;
+    const block = node && node.closest
+      ? node.closest("p, li, blockquote, h1, h2, h3") : null;
+    const raw = (block || node || {}).textContent || "";
+    const txt = raw.replace(/\s+/g, " ").trim();
+    return txt.length > 600 ? txt.slice(0, 600) + "…" : txt;
+  }
+
   class AskBox {
     constructor(text, anchor, depth, parentAnswer, opts) {
       opts = opts || {};
@@ -1217,11 +1231,24 @@
       // 另留一份"没收起"的选区:鼠标移到框上时,用它高亮原文里那句话
       this.srcRange = anchor ? anchor.cloneRange() : null;
 
+      // 原文里"这一段"的上下文 —— 追问时一起发过去。
+      // 不带的话,模型只看得到自己上一轮的回答,容易脱离原文。
+      let ctx = opts.context || "";
+      if (!ctx && anchor) {
+        const host = anchor.startContainer.parentElement;
+        const owner = host && host.closest ? host.closest(".askbox") : null;
+        ctx = (owner && owner.__box && owner.__box.context)
+          ? owner.__box.context       // 追问:沿用父级那段原文
+          : paragraphContext(anchor); // 首次:取选区所在段落
+      }
+      this.context = ctx;
+
       this.depth = depth || 1;   // 第几层:正文里问出来的是第 1 层,在答案上再问就是第 2 层
       this.parentAnswer = parentAnswer || "";   // 父级答案:追问时作为背景一起发给模型
 
       const node = document.getElementById("boxTpl").content.cloneNode(true);
       this.el     = node.querySelector(".askbox");
+      this.el.__box = this;   // 追问时靠它把父级的原文段落传下去
       this.quoteEl = node.querySelector(".quote");
       this.qtextEl = node.querySelector(".qtext");
       this.inputEl = node.querySelector(".q");
@@ -1640,10 +1667,13 @@
       // 有图时,图作为内容块发过去;提示词也不再提"选中的文字"
       const userContent = this.image
         ? (this.parentAnswer
-            ? t("followPrev") + "\n\"\"\"\n" + this.parentAnswer + "\n\"\"\"\n\n" + t("followQ") + question
+            ? (this.context ? t("followSrc") + "\n\"\"\"\n" + this.context + "\n\"\"\"\n\n" : "")
+              + t("followPrev") + "\n\"\"\"\n" + this.parentAnswer + "\n\"\"\"\n\n"
+              + t("followQ") + question
             : t("myQuestion") + question)
         : this.parentAnswer
           ? t("followIntro") + "\n\n"
+            + (this.context ? t("followSrc") + "\n\"\"\"\n" + this.context + "\n\"\"\"\n\n" : "")
             + t("followPrev") + "\n\"\"\"\n" + this.parentAnswer + "\n\"\"\"\n\n"
             + t("followSel") + "\n\"\"\"\n" + this.text + "\n\"\"\"\n\n"
             + t("followQ") + question
