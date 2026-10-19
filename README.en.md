@@ -108,6 +108,27 @@ Two known edges:
 - Only the plain `chat/completions` is used — no provider-specific parameters.
 - A wrong model name is surfaced verbatim from the server inside the panel (with a retry).
 
+## Why it is a single file
+
+**Not a style choice — it follows from the entry point: this tool is meant to be downloaded, double-clicked and opened, not installed, configured and run. One extra step in that path and it stops working.**
+
+Three things follow at once:
+
+- **No infrastructure to distribute.** Nothing to deploy, no domain to renew, no service that goes down. Sending it to someone is sending one file.
+- **"Your data stays in your browser" is a structural fact, not a promise.** With no backend there is nowhere to upload it silently; the file is small enough to read through yourself.
+- **Its lifetime depends on no one.** No dependencies means nothing to go stale. The file you send today still behaves the same three years from now.
+
+The price is real: **every capability has to be written here** — range anchoring, offset serialization, markdown conversion, image pasting, persistence.
+
+So the test for pulling anything in is two questions:
+
+1. If it breaks, can I fix it?
+2. Could I write this more correctly than it is written?
+
+**Two yeses: write it. Either no: depend on it.**
+
+And in some areas (crypto, time zones, PDF parsing) writing it myself would certainly be wrong — so those simply are not done. **Not doing it is the only dependency that never needs maintenance.**
+
 ## What this deliberately doesn't do
 
 No accounts. No cloud sync. No history. No mobile app. No backend.
