@@ -7,7 +7,12 @@
   </picture>
 </p>
 
-<h3 align="center">The answer should grow where the question is — not somewhere else.</h3>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/tagline-en-dark.svg">
+    <img src="assets/tagline-en.svg" alt="The answer should grow where the question is — not somewhere else." width="760">
+  </picture>
+</p>
 
 <p align="center"><sub><a href="README.md">中文</a> · <b>English</b></sub></p>
 

@@ -7,7 +7,12 @@
   </picture>
 </p>
 
-<h3 align="center">答案应该长在提问的地方,而不是别的地方。</h3>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/tagline-dark.svg">
+    <img src="assets/tagline.svg" alt="答案应该长在提问的地方，而不是别的地方。" width="700">
+  </picture>
+</p>
 
 <p align="center"><sub><b>中文</b> · <a href="README.en.md">English</a></sub></p>
 
