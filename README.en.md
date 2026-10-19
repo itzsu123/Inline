@@ -127,7 +127,7 @@ So the test for pulling anything in is two questions:
 
 **Two yeses: write it. Either no: depend on it.**
 
-And in some areas (crypto, time zones, PDF parsing) writing it myself would certainly be wrong — so those simply are not done. **Not doing it is the only dependency that never needs maintenance.**
+And in some areas (crypto, time zones, PDF parsing) writing it myself would certainly be wrong — so we simply do not do them. **Not doing it is the only dependency that never needs maintenance.**
 
 ## What this deliberately doesn't do
 
