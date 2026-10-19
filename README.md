@@ -16,7 +16,7 @@
 
 <p align="center">
   <a href="https://github.com/itzsu123/Inline/releases/latest/download/Inline.html">
-    <img alt="下载 Inline.html" src="https://img.shields.io/badge/下载-Inline.html-2563eb?style=for-the-badge&logo=html5&logoColor=white">
+    <img alt="下载 Inline.html" src="https://img.shields.io/badge/下载-Inline.html-2563eb?style=for-the-badge">
   </a>
   &nbsp;
   <a href="https://itzsu123.github.io/Inline/Inline.html">
