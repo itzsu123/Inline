@@ -973,7 +973,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-18 19:01";
+  const BUILD = "2026-10-19 10:56";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
@@ -1880,7 +1880,8 @@
     const end = lastVisibleRect(pending.range);
 
     // 整段都滚出去了 → 收起
-    if (end.bottom < 0 || end.top > window.innerHeight) {
+    const vb0 = viewBox();
+    if (end.bottom < vb0.top || end.top > vb0.top + vb0.height) {
       askMark.classList.remove("show");
       return;
     }
@@ -1906,7 +1907,9 @@
 
   window.addEventListener("resize", relayoutMarker);
   if (window.visualViewport) {
+    // 键盘弹起、地址栏收起:resize 和 scroll 不一定都触发,两个都听
     window.visualViewport.addEventListener("resize", relayoutMarker);
+    window.visualViewport.addEventListener("scroll", relayoutMarker);
   }
 
   // 选中范围变化 → 延迟一下再处理
@@ -1979,15 +1982,25 @@
     showAskMark(end);
   }
 
+  // 真正的可视区域:键盘弹起时,window.innerHeight 往往不变,
+  // 但 visualViewport 的 height 会缩小、offsetTop 会上移。
+  // position:fixed 又按布局视口算 —— 所以必须用它来摆浮动元素。
+  function viewBox() {
+    const vv = window.visualViewport;
+    if (vv) return { left: vv.offsetLeft, top: vv.offsetTop, width: vv.width, height: vv.height };
+    return { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+  }
+
   // 取选区里"屏幕内可见的最后一行"
   // 按真正的最后一行定位会有个坑:全选一整篇时它在屏幕外,框就掉到底部去了
   function lastVisibleRect(range) {
     const list = range.getClientRects();
     if (!list.length) return range.getBoundingClientRect();
 
+    const vb = viewBox();
     let chosen = null;
     for (const r of list) {
-      if (r.bottom > 0 && r.top < window.innerHeight) chosen = r;
+      if (r.bottom > vb.top && r.top < vb.top + vb.height) chosen = r;
     }
     return chosen || list[0];
   }
@@ -2000,28 +2013,29 @@
     const W = askMark.offsetWidth  || 40;
     const H = askMark.offsetHeight || 24;
 
-    // 手机上:贴着选区会被系统的选中菜单和两个把手压住,根本点不到。
-    // 改成固定停在下方 —— 拇指够得着,也不会被菜单盖。
+    // 键盘弹起时 window.innerHeight 往往不变,得按真正的可视区来摆
+    const vb = viewBox();
+
     if (isMobileView()) {
-      // 触屏:固定在屏幕下方居中。贴着选区会被系统选中菜单和把手压住,
+      // 触屏:固定在可视区下方居中。贴着选区会被系统选中菜单和把手压住,
       // 而"浮在展开的框上方"会落到正文中间挡住字 —— 都不如一个固定的位置
-      askMark.style.left = Math.round((window.innerWidth - W) / 2) + "px";
-      askMark.style.top  = (window.innerHeight - H - 96) + "px";
+      askMark.style.left = Math.round(vb.left + (vb.width - W) / 2) + "px";
+      askMark.style.top  = Math.round(vb.top + vb.height - H - 88) + "px";
       return;
     }
 
     // 摆在"选区结束"那个字的右下方;右边放不下就翻到左边,下面放不下就翻到上方
     let left = rect.right + 8;
     let top  = rect.bottom + 6;
-    if (left + W > window.innerWidth)  left = rect.left - W - 8;
-    if (top  + H > window.innerHeight) top  = rect.top  - H - 6;
+    if (left + W > vb.left + vb.width)  left = rect.left - W - 8;
+    if (top  + H > vb.top + vb.height)  top  = rect.top  - H - 6;
 
     // 最后统一夹进视口 —— 全选一整篇时,选区结尾可能在屏幕外很远
     // 不做这一步,标记会跑到看不见的地方,等于没有
-    if (left < 6) left = 6;
-    if (top  < 6) top  = 6;
-    if (left > window.innerWidth  - W - 6) left = window.innerWidth  - W - 6;
-    if (top  > window.innerHeight - H - 6) top  = window.innerHeight - H - 6;
+    if (left < vb.left + 6) left = vb.left + 6;
+    if (top  < vb.top  + 6) top  = vb.top  + 6;
+    if (left > vb.left + vb.width  - W - 6) left = vb.left + vb.width  - W - 6;
+    if (top  > vb.top  + vb.height - H - 6) top  = vb.top  + vb.height - H - 6;
 
     askMark.style.left = left + "px";
     askMark.style.top  = top  + "px";
