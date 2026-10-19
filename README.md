@@ -5,11 +5,11 @@
 一个 `Inline.html`，零依赖，点两下就能用。
 
 <p align="center">
-  <img src="assets/logo.svg" alt="Inline" width="330">
+  <img src="https://github.com/itzsu123/Inline/raw/main/assets/logo.svg" alt="Inline" width="330">
 </p>
 
 <p align="center">
-  <img src="assets/tagline.svg" alt="答案应该长在提问的地方，而不是别的地方。" width="700">
+  <img src="https://github.com/itzsu123/Inline/raw/main/assets/tagline.svg" alt="答案应该长在提问的地方，而不是别的地方。" width="700">
 </p>
 
 <p align="center"><sub><b>中文</b> · <a href="README.en.md">English</a></sub></p>
