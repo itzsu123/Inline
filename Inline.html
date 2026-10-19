@@ -976,7 +976,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-19 11:13";
+  const BUILD = "2026-10-19 15:01";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
@@ -2274,6 +2274,15 @@
   document.addEventListener("paste", (e) => {
     if (e._inlineHandled) return;
     const cd = e.clipboardData || window.clipboardData;
+    // 粘贴的是一份存档(插件/别的机器导出的 .inline.json)→ 直接导入
+    // 这样"把材料递进来"只需要一次 Ctrl+V,不用点导入再找文件
+    const text0 = cd.getData ? cd.getData("text/plain") : "";
+    if (text0 && tryImportArchive(text0)) {
+      e._inlineHandled = true;
+      e.preventDefault();
+      return;
+    }
+
     const imgs = Array.from(cd.items || []).filter(i => (i.type || "").startsWith("image/"));
     if (!imgs.length) return;
     e._inlineHandled = true;   // 捕获阶段在最前面,标记要在这里打
@@ -2536,6 +2545,20 @@
   function scheduleSave() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveDoc, 400);
+  }
+
+  // 粘贴内容是不是一份存档?是就导入,返回 true
+  // 判断尽量宽松但安全:必须是对象、必须有 html 字符串
+  function tryImportArchive(text) {
+    const s = String(text || "").trim();
+    if (s.length < 20 || s[0] !== "{") return false;
+    if (s.indexOf("\"html\"") < 0) return false;
+    let data = null;
+    try { data = JSON.parse(s); } catch { return false; }
+    if (!data || typeof data.html !== "string") return false;
+    restoreFrom(data);
+    scheduleSave();
+    return true;
   }
 
   function restoreFrom(data) {
