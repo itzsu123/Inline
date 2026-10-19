@@ -1,13 +1,7 @@
 # Inline · 看到哪，理解到哪
 
 <p align="center">
-  <img src="assets/logo.svg#gh-light-mode-only" alt="Inline" width="330">
-  <img src="assets/logo-dark.svg#gh-dark-mode-only" alt="Inline" width="330">
-</p>
-
-<p align="center">
-  <img src="assets/tagline.svg#gh-light-mode-only" alt="答案应该长在提问的地方，而不是别的地方。" width="700">
-  <img src="assets/tagline-dark.svg#gh-dark-mode-only" alt="答案应该长在提问的地方，而不是别的地方。" width="700">
+  <img src="assets/hero.svg" alt="Inline · 答案应该长在提问的地方，而不是别的地方。" width="620">
 </p>
 
 <p align="center"><sub><b>中文</b> · <a href="README.en.md">English</a></sub></p>

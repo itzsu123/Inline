@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300" role="img" aria-label="Inline">
+  <defs>
+    <radialGradient id="glow" cx="30%" cy="10%" r="70%">
+      <stop offset="0%" stop-color="#6d5bd0" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#6d5bd0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="900" height="300" rx="20" fill="#0d1117"/>
+  <rect width="900" height="300" rx="20" fill="url(#glow)"/>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+    .mark { font-size: 96px; font-weight: 700; fill: #e8e8e8; letter-spacing: -1px; }
+    .accent { fill: #a78bfa; }
+    .tag { font-size: 22px; font-weight: 700; fill: #e8e8e8; }
+  </style>
+  <text class="mark" x="450" y="140" text-anchor="middle">In<tspan class="accent">li</tspan>ne</text>
+  <text class="tag" x="450" y="210" text-anchor="middle">The answer should <tspan class="accent">grow where the question is</tspan></text>
+  <text class="tag" x="450" y="244" text-anchor="middle">— not somewhere else.</text>
+</svg>
