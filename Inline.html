@@ -206,7 +206,7 @@
     font-family: inherit;
     font-weight: 600;
     border: none;
-    background: #0d9488;
+    background: #3b82f6;
     color: #fff;
     border-radius: 14px;
     cursor: pointer;
@@ -220,7 +220,7 @@
   }
 
   #askMark:hover {
-    background: #0f766e;
+    background: #2563eb;
   }
 
   /* 最小化 / 隐藏 / 展开:放在顶部那一行里,不再浮在正文上
@@ -235,7 +235,7 @@
     font-weight: 600;
     font-family: inherit;
     border: none;
-    background: #0d9488;
+    background: #3b82f6;
     color: #fff;
     border-radius: 22px;
     cursor: pointer;
@@ -249,12 +249,12 @@
   }
 
   #foldAllBtn:hover {
-    background: #0f766e;
-    border-color: #0f766e;
+    background: #2563eb;
+    border-color: #2563eb;
   }
 
   #foldAllBtn:active {
-    background: #0f766e;
+    background: #1d4ed8;
   }
 
   /* 提问框:内嵌在正文里
@@ -271,9 +271,9 @@
     position: static;
     margin: 4px 0 14px;
     padding: 8px 12px;
-    background: #f6fbfa;
-    border: 1px solid #ccece8;
-    border-left: 3px solid #0d9488;
+    background: #f8fbff;
+    border: 1px solid #dbeafe;
+    border-left: 3px solid #3b82f6;
     border-radius: 0 8px 8px 0;
   }
 
@@ -328,7 +328,7 @@
   .askbox .thread {
     margin-top: 8px;
     padding-left: 10px;
-    border-left: 2px dashed #ccece8;
+    border-left: 2px dashed #cfe0fa;
   }
 
   .askbox .thread .askbox {
@@ -376,8 +376,8 @@
 
   /* 只在悬停时才"亮起来" —— 平时它就是一处淡淡的批注 */
   .askbox.collapsed .chip:hover {
-    color: #0f766e;
-    background: #e6f6f4;
+    color: #1d4ed8;
+    background: #e8f0fe;
     border-bottom-color: transparent;
     border-radius: 4px;
   }
@@ -389,8 +389,8 @@
   }
 
   .askbox.nested.collapsed .chip:hover {
-    color: #0d9488;
-    background: #e6f6f4;
+    color: #7c3aed;
+    background: #f3ecff;
   }
 
   /* 框里显示的"你选中的那段" */
@@ -407,8 +407,8 @@
     display: inline-block;
     font-size: 11px;
     font-weight: 700;
-    color: #0f766e;
-    background: #e6f6f4;
+    color: #1d4ed8;
+    background: #e8f0fe;
     border-radius: 4px;
     padding: 1px 7px;
     margin-bottom: 4px;
@@ -430,7 +430,7 @@
   /* 追问层的标题用紫色 —— 徽章删掉之后,这是它唯一的颜色身份,
      而且只染标题这一行,不会把整块内容都染花 */
   .askbox.nested .qtitle {
-    color: #0f766e;   /* 同一个紫,但降了饱和度 —— 标题够醒目就够了,不用抢 */
+    color: #7a67a8;   /* 同一个紫,但降了饱和度 —— 标题够醒目就够了,不用抢 */
   }
 
   .askbox .qtitle.show {
@@ -486,7 +486,7 @@
 
   .askbox .ask {
     border: none;
-    background: #0d9488;
+    background: #3b82f6;
     color: #fff;
     border-radius: 6px;
     cursor: pointer;
@@ -500,11 +500,11 @@
   }
 
   .askbox .ask:hover {
-    background: #0f766e;
+    background: #2563eb;
   }
 
   .askbox .ask:active {
-    background: #0f766e;
+    background: #1d4ed8;
   }
 
   .askbox .hint {
@@ -608,7 +608,7 @@
     cursor: pointer;
   }
 
-  #imgBtn:hover { color: #0f766e; }
+  #imgBtn:hover { color: #1d4ed8; }
 
   #imgBtn svg { display: block; }
 
@@ -723,13 +723,13 @@
     padding: 0;
     font-family: inherit;
     font-size: inherit;
-    color: #0d9488;
+    color: #3b82f6;
     cursor: pointer;
     text-decoration: underline;
   }
 
   .askbox .retry:hover {
-    color: #0f766e;
+    color: #1d4ed8;
   }
 
   .askbox .copy:hover {
@@ -976,7 +976,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-19 12:17";
+  const BUILD = "2026-10-19 11:13";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
