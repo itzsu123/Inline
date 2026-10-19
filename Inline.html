@@ -976,7 +976,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-19 15:21";
+  const BUILD = "2026-10-19 15:28";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
@@ -2558,6 +2558,13 @@
     let data = null;
     try { data = JSON.parse(s); } catch { return false; }
     if (!data || typeof data.html !== "string") return false;
+    // 存档里带着 key(从 DSH 的配置映射过来的)→ 顺手存下,省得再填一次
+    // 只认字符串,不认别的;存完就是普通的一份 key,和手动填的没区别
+    if (data.api && typeof data.api.key === "string" && data.api.key.trim()) {
+      localStorage.setItem("deepseek_key", data.api.key.trim());
+      refreshKeyState();
+    }
+
     // 当前正文不是示例、也不是空的 → 先问一句
     // 不然粘贴一篇会把手上的阅读(连问答)整个换掉,而且不可撤销
     const curHtml = cleanArticleHTML();
