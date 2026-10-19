@@ -2,7 +2,7 @@
 
 一个单文件的阅读工具。选中文字就地展开问答，追问会挂成一层层的链，读完收起来，只在原文里留下一条淡淡的批注。
 
-一个 `Inline.html`，零依赖，点两下就能用。
+单个 `Inline.html`，零依赖，点两下就能用。
 
 <p align="center">
   <a href="https://itzsu123.github.io/Inline/Inline.html"><img src="https://github.com/itzsu123/Inline/raw/main/assets/logo.svg" alt="Inline" width="330"></a>
