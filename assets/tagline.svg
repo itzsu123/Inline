@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 60" width="780" height="60" role="img" aria-label="tagline">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 60" width="780" height="60" role="img" aria-label="答案应该长在提问的地方，而不是别的地方。">
   <style>
     text {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
       font-size: 29px;
       font-weight: 700;
-      fill: #111;
+      fill: #6b7280;
       letter-spacing: 0.5px;
     }
-    .accent { fill: #6d5bd0; }
+    .accent { fill: #7c5cf0; }
   </style>
   <text x="390" y="40" text-anchor="middle" textLength="740" lengthAdjust="spacing">答案应该长在<tspan class="accent">提问的地方</tspan>，而不是别的地方。</text>
 </svg>
