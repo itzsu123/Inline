@@ -7,9 +7,9 @@
   </picture>
 </p>
 
-<p align="center"><sub><b>中文</b> · <a href="README.en.md">English</a></sub></p>
+<h3 align="center">答案应该长在提问的地方,而不是别的地方。</h3>
 
-> **答案应该长在提问的地方，而不是别的地方。**
+<p align="center"><sub><b>中文</b> · <a href="README.en.md">English</a></sub></p>
 
 一个单文件的阅读工具。选中文字就地展开问答，追问会挂成一层层的链，读完收起来，只在原文里留下一条淡淡的批注。
 

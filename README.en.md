@@ -7,9 +7,9 @@
   </picture>
 </p>
 
-<p align="center"><sub><a href="README.md">中文</a> · <b>English</b></sub></p>
+<h3 align="center">The answer should grow where the question is — not somewhere else.</h3>
 
-> **The answer should grow where the question is — not somewhere else.**
+<p align="center"><sub><a href="README.md">中文</a> · <b>English</b></sub></p>
 
 A single-file reading tool. Select text, a Q&A panel opens right there. Follow-ups stack into a chain. When you're done, collapse them: the article is an article again, with a few faint underlined notes left behind.
 
