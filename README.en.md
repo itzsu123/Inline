@@ -20,11 +20,13 @@ One `Inline.html`. No dependencies. Open it and read.
   <a href="https://github.com/itzsu123/Inline/releases/latest/download/Inline.html">
     <img alt="Download Inline.html" src="https://img.shields.io/badge/download-Inline.html-2563eb?style=for-the-badge&logo=html5&logoColor=white">
   </a>
+  &nbsp;
+  <a href="https://itzsu123.github.io/Inline/Inline.html">
+    <img alt="Open on your phone" src="https://img.shields.io/badge/phone-open%20it-6d5bd0?style=for-the-badge">
+  </a>
 </p>
 
-<p align="center"><sub>One file, no dependencies. Download it and open it in a browser</sub></p>
-
-<p align="center"><sub>On a phone, don't download it — just open <a href="https://itzsu123.github.io/Inline/Inline.html">this link</a></sub></p>
+<p align="center"><sub>Desktop: download and double-click &nbsp;·&nbsp; Phone: use the right button, no download, storage stays tied to the domain</sub></p>
 
 <p align="center"><sub>Needs a DeepSeek API key — enter it once; it stays in your browser</sub></p>
 

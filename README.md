@@ -20,11 +20,13 @@
   <a href="https://github.com/itzsu123/Inline/releases/latest/download/Inline.html">
     <img alt="下载 Inline.html" src="https://img.shields.io/badge/下载-Inline.html-2563eb?style=for-the-badge&logo=html5&logoColor=white">
   </a>
+  &nbsp;
+  <a href="https://itzsu123.github.io/Inline/Inline.html">
+    <img alt="手机上直接打开" src="https://img.shields.io/badge/手机-直接打开-6d5bd0?style=for-the-badge">
+  </a>
 </p>
 
-<p align="center"><sub>单文件、零依赖。下载后双击用浏览器打开</sub></p>
-
-<p align="center"><sub>手机不用下载,直接开 <a href="https://itzsu123.github.io/Inline/Inline.html">这个链接</a> —— 存储按域名走,换版本也不会丢</sub></p>
+<p align="center"><sub>电脑:下载后双击打开 &nbsp;·&nbsp; 手机:点右边那个,不下载,数据按域名存着不会丢</sub></p>
 
 <p align="center"><sub>需要一把 DeepSeek API key —— 填一次,只存在你自己的浏览器里</sub></p>
 
