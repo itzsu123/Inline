@@ -7,7 +7,7 @@
       fill: #808a99;
       letter-spacing: 0.5px;
     }
-    .accent { fill: #7c5cf0; }
+    .accent { fill: #0d9488; }
   </style>
   <text x="390" y="40" text-anchor="middle" textLength="740" lengthAdjust="spacing">答案应该长在<tspan class="accent">提问的地方</tspan>，而不是别的地方。</text>
 </svg>

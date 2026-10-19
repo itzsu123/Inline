@@ -7,7 +7,7 @@
       font-weight: 700;
       fill: #808a99;
     }
-    .mid text { fill: #7c5cf0; }
+    .mid text { fill: #0d9488; }
     .mid { opacity: 0; }
 
     .left  { animation: goLeft  5s ease-in-out infinite; }
