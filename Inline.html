@@ -976,7 +976,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-19 15:01";
+  const BUILD = "2026-10-19 15:21";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
@@ -1048,6 +1048,7 @@
       followIntro:      "这是一个追问,针对你上一轮的回答。",
       followPrev:       "上一轮你的回答是:",
         followSrc:        "原文全文:",
+        importConfirm:    "当前文档会被这份存档替换,原来的问答也会一起消失。继续?",
       followSel:        "用户选中了其中的一句:",
       followQ:          "他的问题是:",
       readHere:         "我读到这里:",
@@ -1111,6 +1112,7 @@
       followIntro:      "This is a follow-up about your previous answer.",
       followPrev:       "Your previous answer was:",
         followSrc:        "The full article:",
+        importConfirm:    "The current document will be replaced, including its Q&A. Continue?",
       followSel:        "The user selected one sentence from it:",
       followQ:          "Their question is: ",
       readHere:         "I am reading this:",
@@ -2556,6 +2558,15 @@
     let data = null;
     try { data = JSON.parse(s); } catch { return false; }
     if (!data || typeof data.html !== "string") return false;
+    // 当前正文不是示例、也不是空的 → 先问一句
+    // 不然粘贴一篇会把手上的阅读(连问答)整个换掉,而且不可撤销
+    const curHtml = cleanArticleHTML();
+    const curText = article.textContent.trim();
+    const isSeed = !!seedSignature && curHtml === seedSignature;
+    if (curText && !isSeed) {
+      if (!window.confirm(t("importConfirm"))) return true;
+    }
+
     restoreFrom(data);
     scheduleSave();
     return true;
