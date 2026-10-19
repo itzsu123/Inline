@@ -172,6 +172,9 @@
     padding: 20px;
     outline: none;
     user-select: text;  /* 显式声明:避免被继承的 user-select 拦住光标 */
+    -webkit-user-select: text;
+    /* iOS/部分安卓浏览器:不加这个,长按会弹"编辑"菜单而不是选中 */
+    -webkit-touch-callout: default;
   }
 
   /* 占位提示:只在正文真的空的时候出现(CSS 的 :empty)
@@ -973,7 +976,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-19 11:05";
+  const BUILD = "2026-10-19 11:13";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
@@ -1044,7 +1047,7 @@
       sysPrompt:        "用大白话解释用户选中的内容,只回答他问的那一点,不要展开无关的东西。",
       followIntro:      "这是一个追问,针对你上一轮的回答。",
       followPrev:       "上一轮你的回答是:",
-      followSrc:        "原文里相关的一段:",
+        followSrc:        "原文全文:",
       followSel:        "用户选中了其中的一句:",
       followQ:          "他的问题是:",
       readHere:         "我读到这里:",
@@ -1107,7 +1110,7 @@
       sysPrompt:        "Explain the selected passage in plain language. Answer only the point asked, and do not pad it with anything unrelated.",
       followIntro:      "This is a follow-up about your previous answer.",
       followPrev:       "Your previous answer was:",
-      followSrc:        "The relevant passage from the article:",
+        followSrc:        "The full article:",
       followSel:        "The user selected one sentence from it:",
       followQ:          "Their question is: ",
       readHere:         "I am reading this:",
@@ -1205,6 +1208,14 @@
   //  提问框:每次选中都克隆一个新的,所以可以同时存在好几个
   //  每个框自己带着"它锚定的那段文字",互不干扰
   // ============================================================
+  // 追问时把整篇文章作为背景发过去。
+  // 纯文本几千字的成本可以接受,换来的是模型永远知道这句话在讲什么 ——
+  // 只给一段,模型就得靠"上一轮回答"去猜语境,越问越飘。
+  function articleFull(limit) {
+    const txt = cleanText();
+    return txt.length > limit ? txt.slice(0, limit) + "…" : txt;
+  }
+
   // 取选区所在的那一个段落,作为"原文上下文"。
   // 太长的截断 —— 追问要的是语境,不是全文。
   function paragraphContext(range) {
@@ -1665,15 +1676,18 @@
       // 追问时把父级答案整段作为背景带上 ——
       // 不然模型只看到一个孤立的句子,不知道它在说什么
       // 有图时,图作为内容块发过去;提示词也不再提"选中的文字"
+      // 追问才带全文 —— 第一次提问本来就把选中的那句发出去了
+      const srcText = this.parentAnswer ? articleFull(4000) : "";
+
       const userContent = this.image
         ? (this.parentAnswer
-            ? (this.context ? t("followSrc") + "\n\"\"\"\n" + this.context + "\n\"\"\"\n\n" : "")
+            ? (srcText ? t("followSrc") + "\n\"\"\"\n" + srcText + "\n\"\"\"\n\n" : "")
               + t("followPrev") + "\n\"\"\"\n" + this.parentAnswer + "\n\"\"\"\n\n"
               + t("followQ") + question
             : t("myQuestion") + question)
         : this.parentAnswer
           ? t("followIntro") + "\n\n"
-            + (this.context ? t("followSrc") + "\n\"\"\"\n" + this.context + "\n\"\"\"\n\n" : "")
+            + (srcText ? t("followSrc") + "\n\"\"\"\n" + srcText + "\n\"\"\"\n\n" : "")
             + t("followPrev") + "\n\"\"\"\n" + this.parentAnswer + "\n\"\"\"\n\n"
             + t("followSel") + "\n\"\"\"\n" + this.text + "\n\"\"\"\n\n"
             + t("followQ") + question
