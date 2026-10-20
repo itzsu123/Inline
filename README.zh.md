@@ -29,24 +29,6 @@
 <p align="center"><sub>需要一把 DeepSeek API key —— 填一次,只存在你自己的浏览器里</sub></p>
 
 
-<p align="center">
-  <img src="assets/demo-2.png" width="620" alt="选中「沉没成本」，答案就落在这一句下面">
-</p>
-
-<p align="center"><sub>选中一个词，答案落在这一句下面 —— 不是旁边，不是浮窗。</sub></p>
-
-<p align="center">
-  <img src="assets/demo-3.png" width="620" alt="在答案里再选一句，追问挂成一层">
-</p>
-
-<p align="center"><sub>在答案里再选一句，追问就挂成一层。缩进、浅紫，层级看得见。</sub></p>
-
-<p align="center">
-  <img src="assets/demo-4.png" width="620" alt="收起之后，正文里只剩一条带虚线的小字">
-</p>
-
-<p align="center"><sub>收起之后，正文还是正文，只多了一条带虚线的小字。</sub></p>
-<!-- 动图待补：选中 → 出现「问」→ 点开 → 追问 → 收起 -->
 
 **[English](README.md)**
 

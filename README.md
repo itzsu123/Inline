@@ -28,24 +28,6 @@ One `Inline.html`. No dependencies. Open it and read.
 
 <p align="center"><sub>Needs a DeepSeek API key — enter it once; it stays in your browser</sub></p>
 
-<p align="center">
-  <img src="assets/demo-2.png" width="620" alt="Select a word and the answer lands under that sentence">
-</p>
-
-<p align="center"><sub>Select a word: the answer lands under that sentence — not beside it, not in a floating window.</sub></p>
-
-<p align="center">
-  <img src="assets/demo-3.png" width="620" alt="Select a phrase inside an answer and the follow-up nests">
-</p>
-
-<p align="center"><sub>Select a phrase inside an answer and the follow-up nests one level deeper.</sub></p>
-
-<p align="center">
-  <img src="assets/demo-4.png" width="620" alt="Collapsed: one faint dotted line left in the text">
-</p>
-
-<p align="center"><sub>Collapse it and the article is an article again — one faint dotted line left behind.</sub></p>
-
 ---
 
 ## What it's for
