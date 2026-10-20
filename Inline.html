@@ -664,6 +664,12 @@
 
   /* 答案显示区 */
   /* 等模型时的占位文字 */
+  /* 一次性提示:只比普通提示亮一点,不用彩色,免得像广告 */
+  .askbox .foot .hint.teach {
+    color: #3b82f6;
+    font-weight: 600;
+  }
+
   .askbox .answer.waiting {
     color: #999;
   }
@@ -843,6 +849,7 @@
     .askbox .qtext { font-size: 14px; }
     .askbox.level1 .qtext { font-size: 15px; }
     /* 等模型时的占位文字 */
+
   .askbox .answer.waiting {
     color: #999;
   }
@@ -976,7 +983,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-19 15:28";
+  const BUILD = "2026-10-20 12:42";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
@@ -1049,6 +1056,7 @@
       followPrev:       "上一轮你的回答是:",
         followSrc:        "原文全文:",
         importConfirm:    "当前文档会被这份存档替换,原来的问答也会一起消失。继续?",
+        teachFollowup:    "在答案里选中一句 → 可以追问",
       followSel:        "用户选中了其中的一句:",
       followQ:          "他的问题是:",
       readHere:         "我读到这里:",
@@ -1113,6 +1121,7 @@
       followPrev:       "Your previous answer was:",
         followSrc:        "The full article:",
         importConfirm:    "The current document will be replaced, including its Q&A. Continue?",
+        teachFollowup:    "Select a sentence inside this answer → follow up",
       followSel:        "The user selected one sentence from it:",
       followQ:          "Their question is: ",
       readHere:         "I am reading this:",
@@ -1749,6 +1758,7 @@
         // 单独一次调用,而不是塞进主请求 —— 这样答案格式永远是干净的
         const done = this.answerEl.textContent.trim();
         if (done) this.makeTitle(question, done);
+        if (done) this.teachFollowup();   // 第一次答完,提示一次"可以追问"
 
         scheduleSave();
 
@@ -1756,6 +1766,18 @@
         // 如果是跨域被拦,这里会走到,并且报 Failed to fetch
         this.showError(t("errPrefix") + err.message, () => this.ask(question));
       }
+    }
+
+    // 只在第一次答完时出现一次:很多人不知道"答案里还能继续选"
+    // 用过一次就不再出现,免得变成噪音
+    teachFollowup() {
+      if (localStorage.getItem("inline_taught_followup")) return;
+      localStorage.setItem("inline_taught_followup", "1");
+
+      const hint = this.el.querySelector(":scope > .foot > .hint");
+      if (!hint) return;
+      hint.textContent = t("teachFollowup");
+      hint.classList.add("teach");
     }
 
     // 出错时给一句话,外加一个「重试」—— 不然断一次就得手动再问一遍
