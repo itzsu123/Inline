@@ -11,7 +11,11 @@ One `Inline.html`. No dependencies. Open it and read.
 <p align="center">
   <a href="https://itzsu123.github.io/Inline/Inline.html"><img src="https://github.com/itzsu123/Inline/raw/main/assets/tagline-en.svg" alt="The answer should grow where the question is — not somewhere else." width="760"></a>
 </p>
-https://github.com/user-attachments/assets/83fdbd50-cb9c-45c1-871e-27b94f9667b5
+
+<p align="center">
+  <video src="https://github.com/user-attachments/assets/83fdbd50-cb9c-45c1-871e-27b94f9667b5" controls width="820"></video>
+</p>
+
 <p align="center"><sub><a href="README.zh.md">中文</a> · <b>English</b></sub></p>
 
 <p align="center">
