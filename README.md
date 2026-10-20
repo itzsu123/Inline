@@ -133,6 +133,30 @@ ollama serve
 
 而有些领域（加密、时区、PDF 解析）自己写一定错 —— 那就不做。**不做，是唯一不需要维护的“依赖”。**
 
+## 配合 DSH 使用（可选）
+
+**如果你在用 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)，可以装一个小插件，把"整理材料"这一步也省掉。**
+
+```
+dsh-inline-plugin
+```
+
+装好之后，跟 Agent 说一句：
+
+```
+把 https://example.com/some-article 整理成文章 /inline
+```
+
+```
+Agent   抓取、总结、写成文章
+插件    转成存档 → 放进剪贴板 → 打开 Inline
+你      按一次 Ctrl+V
+```
+
+**文章和 key 一起进去，不用找文件、不用再填一遍。**
+
+> 「粘贴存档即导入」是 Inline 自己的功能，和插件无关 —— 你也可以把任何一份 `.inline.json` 复制成文本，直接粘进来。
+
 ## 关于不做
 
 不做账号，不做云同步，不做历史，不做移动 App，不做后端。

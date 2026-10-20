@@ -129,6 +129,30 @@ So the test for pulling anything in is two questions:
 
 And in some areas (crypto, time zones, PDF parsing) writing it myself would certainly be wrong — so we simply do not do them. **Not doing it is the only dependency that never needs maintenance.**
 
+## Optional: use it from DeepSeek Harness
+
+**If you work inside [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), a small plugin removes the "prepare the material" step too.**
+
+```
+dsh-inline-plugin
+```
+
+Then just say:
+
+```
+Turn https://example.com/some-article into an article /inline
+```
+
+```
+Agent    fetches, summarizes, writes the article
+Plugin   converts it to a snapshot → clipboard → opens Inline
+You      press Ctrl+V once
+```
+
+**The article and your key both land in place — no file picking, no re-entering the key.**
+
+> Importing a pasted snapshot is Inline's own feature, independent of the plugin — any `.inline.json` can be copied as text and pasted in directly.
+
 ## What this deliberately doesn't do
 
 No accounts. No cloud sync. No history. No mobile app. No backend.
