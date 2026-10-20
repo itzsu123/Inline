@@ -12,6 +12,10 @@
   <a href="https://itzsu123.github.io/Inline/Inline.html"><img src="https://github.com/itzsu123/Inline/raw/main/assets/tagline.svg" alt="答案应该长在提问的地方，而不是别的地方。" width="700"></a>
 </p>
 
+
+https://github.com/user-attachments/assets/feaa535e-3ca2-40f4-b792-045857c609f4
+
+
 <p align="center"><sub><b>中文</b> · <a href="README.md">English</a></sub></p>
 
 <p align="center">
