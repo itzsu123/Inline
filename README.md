@@ -1,98 +1,94 @@
-# Inline · 看到哪，理解到哪
+# Inline · Understand where you read
 
-一个单文件的阅读工具。选中文字就地展开问答，追问会挂成一层层的链，读完收起来，只在原文里留下一条淡淡的批注。
+A single-file reading tool. Select text, a Q&A panel opens right there. Follow-ups stack into a chain. When you're done, collapse them: the article is an article again, with a few faint underlined notes left behind.
 
-单个 `Inline.html`，零依赖，点两下就能用。
+One `Inline.html`. No dependencies. Open it and read.
 
 <p align="center">
   <a href="https://itzsu123.github.io/Inline/Inline.html"><img src="https://github.com/itzsu123/Inline/raw/main/assets/logo.svg" alt="Inline" width="330"></a>
 </p>
 
 <p align="center">
-  <a href="https://itzsu123.github.io/Inline/Inline.html"><img src="https://github.com/itzsu123/Inline/raw/main/assets/tagline.svg" alt="答案应该长在提问的地方，而不是别的地方。" width="700"></a>
+  <a href="https://itzsu123.github.io/Inline/Inline.html"><img src="https://github.com/itzsu123/Inline/raw/main/assets/tagline-en.svg" alt="The answer should grow where the question is — not somewhere else." width="760"></a>
 </p>
 
-<p align="center"><sub><b>中文</b> · <a href="README.en.md">English</a></sub></p>
+<p align="center"><sub><a href="README.zh.md">中文</a> · <b>English</b></sub></p>
 
 <p align="center">
   <a href="https://github.com/itzsu123/Inline/releases/latest/download/Inline.html">
-    <img alt="下载 Inline.html" src="https://img.shields.io/badge/下载-Inline.html-2563eb?style=for-the-badge">
+    <img alt="Download Inline.html" src="https://img.shields.io/badge/download-Inline.html-2563eb?style=for-the-badge">
   </a>
   &nbsp;
   <a href="https://itzsu123.github.io/Inline/Inline.html">
-    <img alt="手机上直接打开" src="https://img.shields.io/badge/手机-直接打开-6d5bd0?style=for-the-badge">
+    <img alt="Open on your phone" src="https://img.shields.io/badge/phone-open%20it-6d5bd0?style=for-the-badge">
   </a>
 </p>
 
-<p align="center"><sub>电脑:下载后双击打开 &nbsp;·&nbsp; 手机:点右边那个,不下载,数据按域名存着不会丢</sub></p>
+<p align="center"><sub>Desktop: download and double-click &nbsp;·&nbsp; Phone: use the right button, no download, storage stays tied to the domain</sub></p>
 
-<p align="center"><sub>需要一把 DeepSeek API key —— 填一次,只存在你自己的浏览器里</sub></p>
-
-
-<p align="center">
-  <img src="assets/demo-2.png" width="620" alt="选中「沉没成本」，答案就落在这一句下面">
-</p>
-
-<p align="center"><sub>选中一个词，答案落在这一句下面 —— 不是旁边，不是浮窗。</sub></p>
+<p align="center"><sub>Needs a DeepSeek API key — enter it once; it stays in your browser</sub></p>
 
 <p align="center">
-  <img src="assets/demo-3.png" width="620" alt="在答案里再选一句，追问挂成一层">
+  <img src="assets/demo-2.png" width="620" alt="Select a word and the answer lands under that sentence">
 </p>
 
-<p align="center"><sub>在答案里再选一句，追问就挂成一层。缩进、浅紫，层级看得见。</sub></p>
+<p align="center"><sub>Select a word: the answer lands under that sentence — not beside it, not in a floating window.</sub></p>
 
 <p align="center">
-  <img src="assets/demo-4.png" width="620" alt="收起之后，正文里只剩一条带虚线的小字">
+  <img src="assets/demo-3.png" width="620" alt="Select a phrase inside an answer and the follow-up nests">
 </p>
 
-<p align="center"><sub>收起之后，正文还是正文，只多了一条带虚线的小字。</sub></p>
-<!-- 动图待补：选中 → 出现「问」→ 点开 → 追问 → 收起 -->
+<p align="center"><sub>Select a phrase inside an answer and the follow-up nests one level deeper.</sub></p>
 
-**[English](README.en.md)**
+<p align="center">
+  <img src="assets/demo-4.png" width="620" alt="Collapsed: one faint dotted line left in the text">
+</p>
+
+<p align="center"><sub>Collapse it and the article is an article again — one faint dotted line left behind.</sub></p>
 
 ---
 
-## 它解决什么
+## What it's for
 
-读长文时想问一句，现在只有两个选择：
+When you want to ask something mid-read, you have two options today:
 
-- **切出去搜索。** 回来要重新找到刚才那句话，注意力断一次。
-- **开一个侧边栏或浮窗。** 答案被放进另一个平面，你得在两块地方之间来回看。
+- **Leave and search.** You come back and have to find the sentence again. Attention dropped once.
+- **Open a sidebar or a floating panel.** The answer lives in a different plane, and you keep looking back and forth between two places.
 
-两者都要求你做同一件事：**把注意力从文字上搬走，再搬回来。**
+Both ask you to do the same thing: **carry your attention away from the text, then carry it back.**
 
-Inline 的假设很简单：注意力在哪儿，答案就该出现在哪儿。
+Inline makes a simpler assumption: the answer belongs wherever your attention already is.
 
-## 数据在哪
+## Where your data lives
 
-**全部在你自己的浏览器里。**
+**In your browser, and nowhere else.**
 
-- 正文、每个窗口的内容，存在 `localStorage`，刷新不丢。
-- API key 也只存在 `localStorage`，请求从浏览器直连 API，不经过任何中间服务器。
-- 「导出」把整篇文章连同问答导出成 Markdown，可以带走。
-- 「存档」导出 JSON，「导入」可以搬回另一个浏览器。
+- Article and every panel are stored in `localStorage`. Refresh and they're still there.
+- Your API key lives in `localStorage` too. Requests go straight from the browser to the API; there is no server in between.
+- **Export** writes the whole article plus its Q&A to Markdown.
+- **Backup / Import** moves everything to another browser via JSON.
 
-没有账号，没有后端，没有埋点。
+No account, no backend, no analytics.
 
-## 换模型 / 换服务商
+## Swapping the model
 
-模型没有写死在业务代码里。文件顶部只有两个常量：
+The model isn't hardcoded in the logic. There are two constants at the top of the file:
 
 ```js
 const API_BASE  = "https://api.deepseek.com";
 const API_MODEL = "deepseek-chat";
 ```
 
-**任何兼容 OpenAI /chat/completions 接口的服务都能用。** 比如：
+**Any service exposing an OpenAI-compatible `/chat/completions` endpoint works.** For example:
 
-| 服务 | API_BASE | API_MODEL |
+| Service | API_BASE | API_MODEL |
 |---|---|---|
-| DeepSeek（默认） | https://api.deepseek.com | deepseek-chat |
-| 通义千问 | https://dashscope.aliyuncs.com/compatible-mode/v1 | qwen-plus |
-| Kimi | https://api.moonshot.cn/v1 | moonshot-v1-8k |
-| 本地 ollama | http://localhost:11434/v1 | qwen2.5:7b ¹ |
+| DeepSeek (default) | `https://api.deepseek.com` | `deepseek-chat` |
+| Qwen (DashScope) | `https://dashscope.aliyuncs.com/compatible-mode/v1` | `qwen-plus` |
+| Kimi (Moonshot) | `https://api.moonshot.cn/v1` | `moonshot-v1-8k` |
+| Local ollama | `http://localhost:11434/v1` | `qwen2.5:7b` ¹ |
 
-¹ **本地 ollama 要先放行浏览器**，否则请求会被 CORS 拦掉（表现是 Failed to fetch，看起来像网络问题）：
+¹ **Local ollama must allow the browser first**, otherwise the request is blocked by CORS (you'll see `Failed to fetch`, which looks like a network problem):
 
 ```bash
 # macOS / Linux
@@ -103,66 +99,66 @@ set OLLAMA_ORIGINS=*
 ollama serve
 ```
 
-* 表示允许任意网页调用本机的模型。自己用没问题，用完关掉就好。
+`*` lets any web page call your local model. Fine for personal use; shut it down afterwards.
 
-改完之后，页面上那个 key 输入框要填**对应服务商**的 key。
+After switching, the key field should hold **that provider's** key.
 
-有两个已知的边界：
+Two known edges:
 
-- 只用了最基础的 chat/completions，没有用各家私有参数。
-- 模型名写错时，服务端返回的错误会被原样显示在窗口里（带重试）。
+- Only the plain `chat/completions` is used — no provider-specific parameters.
+- A wrong model name is surfaced verbatim from the server inside the panel (with a retry).
 
-## 为什么只有一个文件
+## Why it is a single file
 
-**并非出于风格，它是由入口决定的：这个工具的用法是“下载、双击、打开”，而非“安装、配置、运行”。这条路径只要多一个前置步骤，就走不通了。**
+**Not a style choice — it follows from the entry point: this tool is meant to be downloaded, double-clicked and opened, not installed, configured and run. One extra step in that path and it stops working.**
 
-三件事因此同时成立：
+Three things follow at once:
 
-- **分发不需要基础设施。** 没有服务器要部署、没有域名要续费、没有服务会挂。发给任何人都只是一个文件。
-- **“数据在你自己的浏览器里”是结构性事实，并非承诺。** 没有后端，就不存在偷偷上传的可能；这个文件可以整个读一遍，自己确认。
-- **寿命不依赖任何一方。** 没有依赖，就没有依赖过期。今天发出去的文件，三年后双击还是同一个行为。
+- **No infrastructure to distribute.** Nothing to deploy, no domain to renew, no service that goes down. Sending it to someone is sending one file.
+- **"Your data stays in your browser" is a structural fact, not a promise.** With no backend there is nowhere to upload it silently; the file is small enough to read through yourself.
+- **Its lifetime depends on no one.** No dependencies means nothing to go stale. The file you send today still behaves the same three years from now.
 
-代价是真实的：**每个能力都得自己实现一遍** —— 选区锚定、偏移量序列化、markdown 转换、图片粘贴、持久化，都是自己写的。
+The price is real: **every capability has to be written here** — range anchoring, offset serialization, markdown conversion, image pasting, persistence.
 
-所以判断一个东西要不要引进来，看两条：
+So the test for pulling anything in is two questions:
 
-1. 出错的时候，我有没有修复权？
-2. 这个能力，我是否可能写得比它更对？
+1. If it breaks, can I fix it?
+2. Could I write this more correctly than it is written?
 
-**两条都是“是”，就自己写；任一是“否”，就依赖它。**
+**Two yeses: write it. Either no: depend on it.**
 
-而有些领域（加密、时区、PDF 解析）自己写一定错 —— 那就不做。**不做，是唯一不需要维护的“依赖”。**
+And in some areas (crypto, time zones, PDF parsing) writing it myself would certainly be wrong — so we simply do not do them. **Not doing it is the only dependency that never needs maintenance.**
 
-## 配合 DSH 使用（可选）
+## Optional: use it from DeepSeek Harness
 
-**如果你在用 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)，可以装一个小插件，把"整理材料"这一步也省掉。**
+**If you work inside [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), a small plugin removes the "prepare the material" step too.**
 
 ```
 dsh-inline-plugin
 ```
 
-装好之后，跟 Agent 说一句：
+Then just say:
 
 ```
-把 https://example.com/some-article 整理成文章 /inline
+Turn https://example.com/some-article into an article /inline
 ```
 
 ```
-Agent   抓取、总结、写成文章
-插件    转成存档 → 放进剪贴板 → 打开 Inline
-你      按一次 Ctrl+V
+Agent    fetches, summarizes, writes the article
+Plugin   converts it to a snapshot → clipboard → opens Inline
+You      press Ctrl+V once
 ```
 
-**文章和 key 一起进去，不用找文件、不用再填一遍。**
+**The article and your key both land in place — no file picking, no re-entering the key.**
 
-> 「粘贴存档即导入」是 Inline 自己的功能，和插件无关 —— 你也可以把任何一份 `.inline.json` 复制成文本，直接粘进来。
+> Importing a pasted snapshot is Inline's own feature, independent of the plugin — any `.inline.json` can be copied as text and pasted in directly.
 
-## 关于不做
+## What this deliberately doesn't do
 
-不做账号，不做云同步，不做历史，不做移动 App，不做后端。
+No accounts. No cloud sync. No history. No mobile app. No backend.
 
-也不做 PDF —— 本质上就是内嵌问答,我们完全有更巧妙的实现方法
+No PDFs either — this is inline Q&A, and there are far cleverer ways to go about it.
 
-## 许可
+## License
 
 MIT
