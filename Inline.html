@@ -983,7 +983,7 @@
   // 只按宽度判断会漏 —— 有些手机浏览器报出来的宽度大于 680,
   // 结果一套手机样式都没生效,页面还按桌面排版。
   // 版本:不进页面,只进控制台和存档 —— 排查时能对上
-  const BUILD = "2026-10-20 12:45";
+  const BUILD = "2026-10-20 12:48";
   console.log("Inline build", BUILD);
 
   // 只看宽度 —— 触屏笔记本(pointer: coarse)不该被当成手机,
@@ -2654,7 +2654,15 @@
       notes: [
         { find: "看看", quote: "看看", title: "点开我",
           q: "这是什么?",
-          a: "答案会出现在你提问的地方。试着选中我这句话里的任意一部分,再点「问」。" }
+          a: "答案会出现在你提问的地方。试着选中我这句话里的任意一部分,再点「问」。",
+          kids: [
+            { quote: "我这句话里的任意一部分", title: "第二层", q: "第二层怎么来的?",
+              a: "在上一层答案里选中一句话,就着它继续问 —— 追问会挂成一层,不会跑到文章里去。",
+              kids: [
+                { quote: "追问会挂成一层", title: "还能更深", q: "还能再深吗?",
+                  a: "能。每一层都能继续问,直到这件事弄明白。收起之后,它们只留下一条淡淡的批注。" }
+              ] }
+          ] }
       ]
     },
     en: {
@@ -2668,7 +2676,15 @@
       notes: [
         { find: "beside", quote: "beside", title: "Click me",
           q: "What is this?",
-          a: "Answers appear right where you ask. Try selecting part of this sentence and hitting Ask." }
+          a: "Answers appear right where you ask. Try selecting part of this sentence and hitting Ask.",
+          kids: [
+            { quote: "part of this sentence", title: "Second level", q: "How does this level happen?",
+              a: "Select a sentence inside an answer and ask again — follow-ups nest one level deeper instead of landing in the article.",
+              kids: [
+                { quote: "nest one level deeper", title: "Go deeper", q: "Can it go deeper?",
+                  a: "Yes. Keep asking until the thing is clear. When you collapse them, one faint line stays behind." }
+              ] }
+          ] }
       ]
     }
   };
